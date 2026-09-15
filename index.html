@@ -1,0 +1,2324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Electron Subshells 3D</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #ffffff; color: #1a1a1a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #scene { position: fixed; inset: 0; background: #ffffff; }
+  canvas { display: block; touch-action: none; }
+  .topbar { position: fixed; top: 22px; left: 26px; pointer-events: none; z-index: 5; }
+  .topbar .brand { font-size: 13px; font-weight: 600; letter-spacing: 2.5px; color: #1a1a1a; }
+  .toolbar { position: fixed; top: 18px; right: 24px; display: flex; gap: 8px; z-index: 10; }
+  button.tool {
+    font-family: inherit; font-size: 11.5px; letter-spacing: .5px; padding: 8px 13px;
+    border-radius: 10px; border: 1px solid #d8d8d8; background: #ffffff; color: #666666;
+    cursor: pointer; transition: all .18s ease;
+  }
+  button.tool:hover { color: #1a1a1a; border-color: #999999; background: #f7f7f7; }
+  button.tool.on { color: #ffffff; background: #1a1a1a; border-color: #1a1a1a; }
+  .panel {
+    position: fixed; top: 50%; left: 26px; transform: translateY(-50%);
+    width: 290px; max-height: 90vh; overflow-y: auto;
+    padding: 16px 14px 14px; border-radius: 16px;
+    background: #ffffff; border: 1px solid #e8e8e8;
+    box-shadow: 0 10px 40px rgba(0,0,0,.07); z-index: 10;
+    scrollbar-width: thin; scrollbar-color: #cccccc transparent;
+  }
+  .panel::-webkit-scrollbar { width: 5px; }
+  .panel::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 4px; }
+  .panel-handle { display: none; }
+  .panel-body { display: contents; }
+  .row-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: #a0a0a0;
+    text-transform: uppercase; margin: 0 0 6px 3px;
+  }
+  .element-input { display: flex; gap: 6px; margin-bottom: 8px; }
+  .element-input input {
+    font-family: inherit; border: 1px solid #e0e0e0; border-radius: 9px;
+    padding: 8px 10px; font-size: 12.5px; color: #1a1a1a; outline: none;
+    transition: border-color .15s ease; background: #ffffff; min-width: 0;
+  }
+  .element-input input:focus { border-color: #888888; }
+  .element-input input::placeholder { color: #bbbbbb; }
+  #elementInput { flex: 1.2; }
+  #chargeInput { flex: 0.8; padding-left: 10px; padding-right: 6px; }
+  #moleculeInput { flex: 1; }
+  #btnDraw, #btnMolecule {
+    font-family: inherit; border: 1px solid #1a1a1a; background: #1a1a1a;
+    color: #ffffff; border-radius: 9px; padding: 8px 14px; font-size: 12.5px;
+    font-weight: 600; cursor: pointer; transition: background .15s ease;
+    white-space: nowrap;
+  }
+  #btnDraw:hover, #btnMolecule:hover { background: #333333; }
+  .config-display {
+    font-size: 12px; color: #444444; padding: 9px 11px; background: #f7f7f7;
+    border-radius: 9px; min-height: 34px; line-height: 1.55;
+    word-break: break-word; margin-bottom: 8px; letter-spacing: 0.2px;
+  }
+  .config-display.error { color: #d94a4a; }
+  .config-display.empty { color: #cccccc; }
+  #configDisplay {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+    font-weight: 600;
+  }
+  #geometryDisplay {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+    font-size: 13px; font-weight: 600; color: #1a1a1a;
+    letter-spacing: .3px; margin-bottom: 8px;
+  }
+  .mol-buttons { display: flex; gap: 3px; padding: 3px; background: #f4f4f4; border-radius: 10px; margin-bottom: 14px; }
+  .mol-btn {
+    flex: 1; padding: 8px 6px; border: none; background: transparent;
+    border-radius: 7px; font-family: inherit; font-size: 12px; font-weight: 600;
+    color: #444444; cursor: pointer; transition: all .15s ease; letter-spacing: .3px;
+  }
+  .mol-btn:hover { color: #000000; }
+  .mol-btn.active { background: #ffffff; color: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,.13); }
+  .mol-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .divider {
+    display: flex; align-items: center; gap: 10px; margin: 2px 0 12px;
+    font-size: 10px; color: #b0b0b0; letter-spacing: 1px;
+    text-transform: uppercase; font-weight: 700;
+  }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #ececec; }
+  .n-row, .type-row { display: flex; gap: 3px; padding: 3px; background: #f4f4f4; border-radius: 10px; margin-bottom: 14px; }
+  .n-pill, .type-pill {
+    position: relative; flex: 1; min-width: 22px; padding: 7px 3px;
+    border: none; background: transparent; border-radius: 7px;
+    font-family: inherit; font-size: 12px; font-weight: 600; color: #444444;
+    cursor: pointer; transition: all .15s ease; line-height: 1;
+  }
+  .type-pill { font-size: 11px; }
+  .n-pill.active, .type-pill.active { background: #ffffff; color: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,.13); }
+  .count-badge {
+    position: absolute; top: -4px; right: -3px; min-width: 14px; height: 14px;
+    line-height: 14px; padding: 0 4px; border-radius: 7px;
+    background: #1a1a1a; color: #ffffff; font-size: 9px; font-weight: 700;
+    pointer-events: none;
+  }
+  .orb-list { display: flex; flex-wrap: wrap; gap: 6px; min-height: 40px; margin-bottom: 14px; }
+  button.orb {
+    font-family: inherit; font-size: 12.5px; padding: 8px 11px; border-radius: 9px;
+    border: 1px solid #e0e0e0; background: #ffffff; color: #444444; cursor: pointer;
+    transition: all .15s ease; white-space: nowrap;
+  }
+  button.orb sub { font-size: .7em; }
+  button.orb:hover { background: #f5f5f5; border-color: #b0b0b0; color: #1a1a1a; }
+  button.orb.active { background: #1a1a1a; border-color: #1a1a1a; color: #ffffff; }
+  #btnClear {
+    width: 100%; font-family: inherit; font-size: 12.5px; font-weight: 600;
+    padding: 10px 14px; border-radius: 10px; border: 1px solid #e0e0e0;
+    background: #ffffff; color: #d94a4a; cursor: pointer; transition: all .18s ease;
+  }
+  #btnClear:hover { background: #fef2f2; border-color: #f0a8a8; }
+  .caption {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+    text-align: center; pointer-events: none; z-index: 5;
+    font-size: 17px; font-weight: 600; color: #1a1a1a;
+    white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis;
+  }
+  .legend {
+    position: fixed; right: 26px; bottom: 28px; display: flex;
+    flex-direction: column; gap: 8px; font-size: 11.5px; color: #777777;
+    z-index: 5; pointer-events: none;
+  }
+  .legend div { display: flex; align-items: center; gap: 8px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot.pos { background: #3b82f6; }
+  .dot.neg { background: #ef4444; }
+  .dot.sigma { background: #3b82f6; }
+  .dot.pi { background: #f59e0b; }
+  .dot.lp { background: #2c2c2c; }
+
+  /* ============================================================
+     移动端：面板可下拉收起
+     ============================================================ */
+  @media (max-width: 760px) {
+    .topbar, .caption, .legend { display: none; }
+    .toolbar { top: 12px; right: 12px; gap: 6px; flex-wrap: wrap; }
+    button.tool { padding: 7px 10px; font-size: 11px; }
+
+    .panel {
+      left: 10px; right: 10px; top: auto; bottom: 10px;
+      transform: none; width: auto;
+      max-height: 56vh;
+      padding: 6px 11px 11px;
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: max-height .32s cubic-bezier(.32,.72,.28,1), padding .32s cubic-bezier(.32,.72,.28,1);
+      scrollbar-width: none;
+    }
+    .panel::-webkit-scrollbar { display: none; }
+
+    /* 收起状态：只剩手柄 */
+    .panel.collapsed {
+      max-height: 34px;
+      padding-bottom: 6px;
+    }
+
+    /* 拖拽手柄 */
+    .panel-handle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 22px;
+      flex-shrink: 0;
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .panel-handle .handle-bar {
+      width: 40px;
+      height: 4px;
+      background: #cfcfcf;
+      border-radius: 2px;
+      transition: background .2s ease;
+    }
+    .panel-handle:active .handle-bar { background: #999999; }
+    .panel.collapsed .panel-handle .handle-bar { background: #b0b0b0; }
+
+    /* 面板内容区 */
+    .panel-body {
+      display: block;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: #cccccc transparent;
+      opacity: 1;
+      transition: opacity .2s ease;
+    }
+    .panel-body::-webkit-scrollbar { width: 3px; }
+    .panel-body::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 4px; }
+    .panel.collapsed .panel-body {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .n-row, .type-row { margin-bottom: 10px; gap: 2px; padding: 2px; }
+    .n-pill, .type-pill { padding: 7px 2px; font-size: 11px; }
+    button.orb { padding: 7px 10px; font-size: 12px; }
+    .element-input input { padding: 7px 9px; font-size: 12px; }
+    #btnDraw, #btnMolecule { padding: 7px 11px; font-size: 12px; }
+  }
+
+  /* 桌面端隐藏手柄 */
+  @media (min-width: 761px) {
+    .panel-handle { display: none; }
+    .panel-body { display: contents; }
+  }
+</style>
+</head>
+<body>
+
+<div id="scene"></div>
+<div class="topbar"><div class="brand">ELECTRON SUBSHELLS · 3D</div></div>
+<div class="toolbar">
+  <button class="tool on" id="btnAxes">⌗ Axes</button>
+  <button class="tool on" id="btnRotate">⟳ Auto Rotate</button>
+  <button class="tool" id="btnReset">⌖ Reset View</button>
+</div>
+
+<aside class="panel" id="panel">
+  <div class="panel-handle" id="panelHandle">
+    <span class="handle-bar"></span>
+  </div>
+  <div class="panel-body" id="panelBody">
+    <div class="row-label">Electron Configuration</div>
+    <div class="element-input">
+      <input type="text" id="elementInput" placeholder="Element" autocomplete="off" spellcheck="false" maxlength="3">
+      <input type="text" id="chargeInput" placeholder="Charge" autocomplete="off" spellcheck="false" maxlength="3">
+      <button id="btnDraw">Draw</button>
+    </div>
+    <div class="config-display empty" id="configDisplay"></div>
+
+    <div class="row-label">Molecular Geometry</div>
+    <div class="element-input">
+      <input type="text" id="moleculeInput" placeholder="ABx or ABx^y±" autocomplete="off" spellcheck="false" maxlength="14">
+      <button id="btnMolecule">Draw</button>
+    </div>
+    <div class="config-display empty" id="geometryDisplay"></div>
+
+    <div class="mol-buttons">
+      <button class="mol-btn" id="btnLonePair">Lone Pairs</button>
+      <button class="mol-btn" id="btnResonance">Resonance</button>
+    </div>
+
+    <div class="divider"><span>Manual</span></div>
+    <div class="row-label">Principal (n)</div>
+    <div class="n-row" id="nRow"></div>
+    <div class="row-label">Azimuthal (l)</div>
+    <div class="type-row" id="typeRow"></div>
+    <div class="row-label" id="labelMl">Magnetic (m<sub>l</sub>)</div>
+    <div class="orb-list" id="orbList"></div>
+
+    <div class="row-label">View Mode</div>
+    <div class="n-row" id="viewRow" style="margin-bottom:14px;">
+      <button class="n-pill active" data-view="shape">Shape</button>
+      <button class="n-pill" data-view="cloud">Cloud</button>
+      <button class="n-pill" data-view="angles">Angles</button>
+    </div>
+    <button id="btnClear">Clear All</button>
+  </div>
+</aside>
+
+<div class="caption" id="capName"></div>
+<div class="legend">
+  <div><span class="dot pos"></span>Positive</div>
+  <div><span class="dot neg"></span>Negative</div>
+  <div><span class="dot sigma"></span>σ Bond</div>
+  <div><span class="dot pi"></span>π Bond</div>
+  <div><span class="dot lp"></span>Lone Pair</div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
+
+/* ===== Math ===== */
+const FACT = [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800];
+const fact = n => FACT[n] ?? 1;
+
+function plgndr(l, m, x) {
+  let pmm = 1;
+  if (m > 0) {
+    const somx2 = Math.sqrt(Math.max(0, (1 - x) * (1 + x)));
+    let f = 1;
+    for (let i = 1; i <= m; i++) { pmm *= -f * somx2; f += 2; }
+  }
+  if (l === m) return pmm;
+  let pmmp1 = x * (2 * m + 1) * pmm;
+  if (l === m + 1) return pmmp1;
+  let pll = 0;
+  for (let ll = m + 2; ll <= l; ll++) {
+    pll = ((2 * ll - 1) * x * pmmp1 - (ll + m - 1) * pmm) / (ll - m);
+    pmm = pmmp1; pmmp1 = pll;
+  }
+  return pll;
+}
+
+function evalRealSH(l, m, cosTheta, phi) {
+  const am = Math.abs(m);
+  const N = Math.sqrt((2 * l + 1) / (4 * Math.PI) * fact(l - am) / fact(l + am));
+  const P = plgndr(l, am, cosTheta);
+  if (m === 0) return N * P;
+  if (m > 0) return Math.SQRT2 * N * P * Math.cos(am * phi);
+  return Math.SQRT2 * N * P * Math.sin(am * phi);
+}
+
+const COLOR_POS = new THREE.Color(0x3b82f6);
+const COLOR_NEG = new THREE.Color(0xef4444);
+
+/* ===== Geometry builders ===== */
+function buildOrbitalGeometry(l, m, thetaSeg = 100, phiSeg = 200) {
+  const am = Math.abs(m);
+  const N = Math.sqrt((2 * l + 1) / (4 * Math.PI) * fact(l - am) / fact(l + am));
+  const twoN = Math.SQRT2 * N;
+  const rows = thetaSeg + 1, cols = phiSeg + 1, count = rows * cols;
+  const sinT = new Float32Array(rows), cosT = new Float32Array(rows), Plm = new Float32Array(rows);
+  for (let i = 0; i < rows; i++) {
+    const theta = (i / thetaSeg) * Math.PI;
+    const ct = Math.cos(theta);
+    sinT[i] = Math.sin(theta); cosT[i] = ct;
+    Plm[i] = plgndr(l, am, ct);
+  }
+  const cosPhi = new Float32Array(cols), sinPhi = new Float32Array(cols);
+  const cosMPhi = new Float32Array(cols), sinMPhi = new Float32Array(cols);
+  for (let j = 0; j < cols; j++) {
+    const phi = (j / phiSeg) * Math.PI * 2;
+    cosPhi[j] = Math.cos(phi); sinPhi[j] = Math.sin(phi);
+    cosMPhi[j] = Math.cos(am * phi); sinMPhi[j] = Math.sin(am * phi);
+  }
+  const rVal = new Float32Array(count), sgn = new Uint8Array(count);
+  let maxR = 1e-9;
+  for (let i = 0; i < rows; i++) {
+    const P = Plm[i]; const base = i * cols;
+    for (let j = 0; j < cols; j++) {
+      let Y;
+      if (m === 0) Y = N * P;
+      else if (m > 0) Y = twoN * P * cosMPhi[j];
+      else Y = twoN * P * sinMPhi[j];
+      const a = Math.abs(Y); const idx = base + j;
+      rVal[idx] = a; sgn[idx] = Y >= 0 ? 1 : 0;
+      if (a > maxR) maxR = a;
+    }
+  }
+  const scale = 1 / maxR;
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  for (let i = 0; i < rows; i++) {
+    const st = sinT[i], ct = cosT[i], base = i * cols;
+    for (let j = 0; j < cols; j++) {
+      const idx = base + j, r = rVal[idx] * scale, k = idx * 3;
+      positions[k] = r * st * cosPhi[j]; positions[k + 1] = r * ct; positions[k + 2] = r * st * sinPhi[j];
+      const c = sgn[idx] ? COLOR_POS : COLOR_NEG;
+      colors[k] = c.r; colors[k + 1] = c.g; colors[k + 2] = c.b;
+    }
+  }
+  const indices = new Uint32Array(thetaSeg * phiSeg * 6);
+  let p = 0;
+  for (let i = 0; i < thetaSeg; i++) {
+    for (let j = 0; j < phiSeg; j++) {
+      const a = i * cols + j, b = a + 1, c = a + cols, d = c + 1;
+      indices[p++] = a; indices[p++] = b; indices[p++] = d;
+      indices[p++] = a; indices[p++] = d; indices[p++] = c;
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.setIndex(new THREE.BufferAttribute(indices, 1));
+  geo.computeVertexNormals();
+  geo.computeBoundingSphere();
+  return geo;
+}
+
+function buildOrbitalCloudGeometry(l, m, count = 2500) {
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const am = Math.abs(m);
+  const N = Math.sqrt((2 * l + 1) / (4 * Math.PI) * fact(l - am) / fact(l + am));
+  let maxY2 = 1e-12;
+  for (let i = 0; i <= 200; i++) {
+    const ct = -1 + 2 * i / 200;
+    const P = plgndr(l, am, ct);
+    const yAbs = (m === 0) ? Math.abs(N * P) : Math.abs(Math.SQRT2 * N * P);
+    const y2 = yAbs * yAbs;
+    if (y2 > maxY2) maxY2 = y2;
+  }
+  maxY2 *= 1.02;
+  let accepted = 0, attempts = 0;
+  const maxAttempts = count * 120;
+  while (accepted < count && attempts < maxAttempts) {
+    attempts++;
+    let x, y, z, r2;
+    do {
+      x = Math.random() * 2 - 1; y = Math.random() * 2 - 1; z = Math.random() * 2 - 1;
+      r2 = x * x + y * y + z * z;
+    } while (r2 > 1 || r2 < 1e-6);
+    const r = Math.sqrt(r2);
+    const cosT = z / r;
+    const phi = Math.atan2(y, x);
+    const Y = evalRealSH(l, m, cosT, phi);
+    const y2 = Y * Y;
+    if (Math.random() * maxY2 > y2) continue;
+    const k = accepted * 3;
+    positions[k] = x; positions[k + 1] = z; positions[k + 2] = y;
+    const c = Y >= 0 ? COLOR_POS : COLOR_NEG;
+    colors[k] = c.r; colors[k + 1] = c.g; colors[k + 2] = c.b;
+    accepted++;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions.subarray(0, accepted * 3), 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors.subarray(0, accepted * 3), 3));
+  geo.computeBoundingSphere();
+  return geo;
+}
+
+function buildLobeGeometry(baseRadius, length, radialSegs = 14, phiSegs = 18) {
+  const positions = [];
+  const indices = [];
+  for (let i = 0; i <= radialSegs; i++) {
+    const t = i / radialSegs;
+    const z = t * length;
+    const r = baseRadius * Math.pow(Math.cos(t * Math.PI / 2), 0.6);
+    for (let j = 0; j <= phiSegs; j++) {
+      const phi = (j / phiSegs) * Math.PI * 2;
+      positions.push(r * Math.cos(phi), r * Math.sin(phi), z);
+    }
+  }
+  const stride = phiSegs + 1;
+  for (let i = 0; i < radialSegs; i++) {
+    for (let j = 0; j < phiSegs; j++) {
+      const a = i * stride + j, b = a + 1, c = a + stride, d = c + 1;
+      indices.push(a, b, d); indices.push(a, d, c);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  geo.computeBoundingSphere();
+  return geo;
+}
+
+function buildPiArc(startPos, endPos, perp, height, tubeRadius = 0.1) {
+  const p0 = startPos.clone();
+  const p1 = startPos.clone().add(perp.clone().multiplyScalar(height * 1.35));
+  const p2 = endPos.clone().add(perp.clone().multiplyScalar(height * 1.35));
+  const p3 = endPos.clone();
+  const curve = new THREE.CubicBezierCurve3(p0, p1, p2, p3);
+  return new THREE.TubeGeometry(curve, 32, tubeRadius, 10, false);
+}
+
+const HYBRID_TYPES = {
+  sp:   { label: 'sp',   nMin: 2, directions: [[0,1,0],[0,-1,0]], params: [0.71, 1.22] },
+  sp2:  { label: 'sp²',  nMin: 2, directions: [[1,0,0],[-0.5,0,Math.sqrt(3)/2],[-0.5,0,-Math.sqrt(3)/2]], params: [0.58, 1.41] },
+  sp3:  { label: 'sp³',  nMin: 2, directions: (() => { const s = 1/Math.sqrt(3); return [[s,s,s],[s,-s,-s],[-s,s,-s],[-s,-s,s]]; })(), params: [0.50, 1.50] },
+  sp3d: { label: 'sp³d', nMin: 3, directions: [[0,1,0],[0,-1,0],[1,0,0],[-0.5,0,Math.sqrt(3)/2],[-0.5,0,-Math.sqrt(3)/2]], params: [0.45, 1.55] },
+  sp3d2:{ label: 'sp³d²',nMin: 3, directions: [[1,0,0],[-1,0,0],[0,0,1],[0,0,-1],[0,1,0],[0,-1,0]], params: [0.41, 1.58] },
+};
+
+const HYBRID_ANGLE_SPECS = {
+  sp:   { pairs: [[0, 1]], angleValues: [180] },
+  sp2:  { pairs: [[0, 1]], angleValues: [120] },
+  sp3:  { pairs: [[0, 1]], angleValues: [109.5] },
+  sp3d: { pairs: [[0, 2], [2, 3], [0, 1]], angleValues: [90, 120, 180] },
+  sp3d2:{ pairs: [[0, 4], [0, 1]], angleValues: [90, 180] },
+};
+
+function buildHybridGeometry(typeId) {
+  const spec = HYBRID_TYPES[typeId];
+  const [a, b] = spec.params;
+  const directions = spec.directions;
+  const thetaSeg = 70, phiSeg = 140;
+  const rows = thetaSeg + 1, cols = phiSeg + 1;
+  const leafVerts = rows * cols, leafIndices = thetaSeg * phiSeg * 6;
+  const numLeaves = directions.length;
+  const positions = new Float32Array(numLeaves * leafVerts * 3);
+  const colors = new Float32Array(numLeaves * leafVerts * 3);
+  const indices = new Uint32Array(numLeaves * leafIndices);
+  let maxR = 1e-9;
+  for (let i = 0; i < rows; i++) {
+    const theta = (i / thetaSeg) * Math.PI;
+    const h = Math.abs(a + b * Math.cos(theta));
+    if (h > maxR) maxR = h;
+  }
+  const localPos = new Float32Array(leafVerts * 3);
+  const localCol = new Float32Array(leafVerts * 3);
+  for (let i = 0; i < rows; i++) {
+    const theta = (i / thetaSeg) * Math.PI;
+    const st = Math.sin(theta), ct = Math.cos(theta);
+    const h = a + b * ct;
+    const r = Math.abs(h) / maxR;
+    const col = (h >= 0) ? COLOR_POS : COLOR_NEG;
+    const base = i * cols;
+    for (let j = 0; j < cols; j++) {
+      const phi = (j / phiSeg) * Math.PI * 2;
+      const idx = (base + j) * 3;
+      localPos[idx] = r * st * Math.cos(phi);
+      localPos[idx + 1] = r * st * Math.sin(phi);
+      localPos[idx + 2] = r * ct;
+      localCol[idx] = col.r; localCol[idx + 1] = col.g; localCol[idx + 2] = col.b;
+    }
+  }
+  const v = new THREE.Vector3();
+  const zAxis = new THREE.Vector3(0, 0, 1);
+  directions.forEach((dir, L) => {
+    const target = new THREE.Vector3(dir[0], dir[1], dir[2]).normalize();
+    const q = new THREE.Quaternion().setFromUnitVectors(zAxis, target);
+    const vOffset = L * leafVerts;
+    for (let i = 0; i < leafVerts; i++) {
+      v.set(localPos[i*3], localPos[i*3+1], localPos[i*3+2]).applyQuaternion(q);
+      const k = (vOffset + i) * 3;
+      positions[k] = v.x; positions[k+1] = v.y; positions[k+2] = v.z;
+      colors[k] = localCol[i*3]; colors[k+1] = localCol[i*3+1]; colors[k+2] = localCol[i*3+2];
+    }
+    let p = L * leafIndices;
+    for (let i = 0; i < thetaSeg; i++) {
+      for (let j = 0; j < phiSeg; j++) {
+        const a0 = vOffset + i * cols + j, b0 = a0 + 1, c0 = a0 + cols, d0 = c0 + 1;
+        indices[p++] = a0; indices[p++] = b0; indices[p++] = d0;
+        indices[p++] = a0; indices[p++] = d0; indices[p++] = c0;
+      }
+    }
+  });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.setIndex(new THREE.BufferAttribute(indices, 1));
+  geo.computeVertexNormals();
+  geo.computeBoundingSphere();
+  return geo;
+}
+
+function buildHybridCloudGeometry(typeId) {
+  const base = buildHybridGeometry(typeId);
+  const pos = base.attributes.position, col = base.attributes.color;
+  const n = pos.count;
+  const positions = new Float32Array(n * 3);
+  const colors = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const jitter = 0.018;
+    positions[i*3] = pos.getX(i) + (Math.random() - 0.5) * jitter;
+    positions[i*3 + 1] = pos.getY(i) + (Math.random() - 0.5) * jitter;
+    positions[i*3 + 2] = pos.getZ(i) + (Math.random() - 0.5) * jitter;
+    colors[i*3] = col.getX(i); colors[i*3 + 1] = col.getY(i); colors[i*3 + 2] = col.getZ(i);
+  }
+  base.dispose();
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.computeBoundingSphere();
+  return geo;
+}
+
+function sizeFor(n) { return 0.32 + (n - 1) * 0.11; }
+const TYPE_RADIUS = [1.0, 1.55, 2.15, 2.8];
+const HYBRID_SCALE = 1.3;
+
+/* ===== 几何工具 ===== */
+function isCoplanar(vertices, epsilon = 0.05) {
+  const n = vertices.length;
+  if (n < 4) return true;
+  let normal = null;
+  for (let i = 1; i < n && !normal; i++) {
+    for (let j = i + 1; j < n && !normal; j++) {
+      const v1 = vertices[i].clone().sub(vertices[0]);
+      const v2 = vertices[j].clone().sub(vertices[0]);
+      const cr = new THREE.Vector3().crossVectors(v1, v2);
+      if (cr.lengthSq() > 1e-8) normal = cr.normalize();
+    }
+  }
+  if (!normal) return true;
+  for (let i = 1; i < n; i++) {
+    const d = Math.abs(vertices[i].clone().sub(vertices[0]).dot(normal));
+    if (d > epsilon) return false;
+  }
+  return true;
+}
+
+function sortCoplanarVertices(vertices) {
+  const n = vertices.length;
+  if (n < 3) return vertices.slice();
+  const centroid = new THREE.Vector3();
+  vertices.forEach(v => centroid.add(v));
+  centroid.divideScalar(n);
+  let normal = null;
+  for (let i = 1; i < n && !normal; i++) {
+    for (let j = i + 1; j < n && !normal; j++) {
+      const v1 = vertices[i].clone().sub(vertices[0]);
+      const v2 = vertices[j].clone().sub(vertices[0]);
+      const cr = new THREE.Vector3().crossVectors(v1, v2);
+      if (cr.lengthSq() > 1e-8) normal = cr.normalize();
+    }
+  }
+  if (!normal) return vertices.slice();
+  const ref1 = vertices[0].clone().sub(centroid);
+  ref1.sub(normal.clone().multiplyScalar(ref1.dot(normal)));
+  if (ref1.lengthSq() < 1e-8) ref1.set(1, 0, 0);
+  ref1.normalize();
+  const ref2 = new THREE.Vector3().crossVectors(normal, ref1).normalize();
+  return vertices.slice().sort((a, b) => {
+    const va = a.clone().sub(centroid);
+    const vb = b.clone().sub(centroid);
+    return Math.atan2(va.dot(ref2), va.dot(ref1)) - Math.atan2(vb.dot(ref2), vb.dot(ref1));
+  });
+}
+
+function findPolyhedronEdges(vertices) {
+  const n = vertices.length;
+  const edges = [];
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const a = vertices[i];
+      const b = vertices[j];
+      const ab = b.clone().sub(a);
+      if (ab.lengthSq() < 1e-10) continue;
+      let isEdge = false;
+      for (let k = 0; k < n; k++) {
+        if (k === i || k === j) continue;
+        const ac = vertices[k].clone().sub(a);
+        const normal = new THREE.Vector3().crossVectors(ab, ac);
+        if (normal.lengthSq() < 1e-10) continue;
+        normal.normalize();
+        let hasPos = false, hasNeg = false;
+        for (let m = 0; m < n; m++) {
+          if (m === i || m === j || m === k) continue;
+          const side = vertices[m].clone().sub(a).dot(normal);
+          if (side > 1e-5) hasPos = true;
+          if (side < -1e-5) hasNeg = true;
+        }
+        if (!hasPos || !hasNeg) { isEdge = true; break; }
+      }
+      if (isEdge) edges.push([a, b]);
+    }
+  }
+  return edges;
+}
+
+function isPointInTriangle3D(p, a, b, c, epsilon = 1e-4) {
+  const ab = new THREE.Vector3().subVectors(b, a);
+  const ac = new THREE.Vector3().subVectors(c, a);
+  let normal = new THREE.Vector3().crossVectors(ab, ac);
+  if (normal.lengthSq() < 1e-10) return false;
+  normal.normalize();
+  const dPlane = new THREE.Vector3().subVectors(p, a).dot(normal);
+  if (Math.abs(dPlane) > epsilon) return false;
+  const v0 = new THREE.Vector3().subVectors(c, a);
+  const v1 = new THREE.Vector3().subVectors(b, a);
+  const v2 = new THREE.Vector3().subVectors(p, a);
+  const dot00 = v0.dot(v0);
+  const dot01 = v0.dot(v1);
+  const dot02 = v0.dot(v2);
+  const dot11 = v1.dot(v1);
+  const dot12 = v1.dot(v2);
+  const invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+  const u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+  const v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+  return (u >= -epsilon) && (v >= -epsilon) && (u + v <= 1 + epsilon);
+}
+
+function isPointInConvexHullMesh(point, hullGeo, epsilon = 1e-4) {
+  const pos = hullGeo.attributes.position;
+  const idx = hullGeo.index;
+  if (!idx) return false;
+  const hullCentroid = new THREE.Vector3();
+  const n = pos.count;
+  for (let i = 0; i < n; i++) {
+    hullCentroid.x += pos.getX(i);
+    hullCentroid.y += pos.getY(i);
+    hullCentroid.z += pos.getZ(i);
+  }
+  hullCentroid.divideScalar(n);
+  const faceCount = idx.count / 3;
+  for (let f = 0; f < faceCount; f++) {
+    const ia = idx.getX(f*3);
+    const ib = idx.getX(f*3+1);
+    const ic = idx.getX(f*3+2);
+    const a = new THREE.Vector3(pos.getX(ia), pos.getY(ia), pos.getZ(ia));
+    const b = new THREE.Vector3(pos.getX(ib), pos.getY(ib), pos.getZ(ib));
+    const c = new THREE.Vector3(pos.getX(ic), pos.getY(ic), pos.getZ(ic));
+    const ab = new THREE.Vector3().subVectors(b, a);
+    const ac = new THREE.Vector3().subVectors(c, a);
+    const normal = new THREE.Vector3().crossVectors(ab, ac);
+    if (normal.lengthSq() < 1e-10) continue;
+    normal.normalize();
+    const faceCentroid = new THREE.Vector3().addVectors(a, b).add(c).divideScalar(3);
+    if (normal.dot(new THREE.Vector3().subVectors(hullCentroid, faceCentroid)) > 0) {
+      normal.negate();
+    }
+    const dist = new THREE.Vector3().subVectors(point, a).dot(normal);
+    if (dist > epsilon) return false;
+  }
+  return true;
+}
+
+function isPointInConvexHull(point, vertices) {
+  if (vertices.length === 3) {
+    return isPointInTriangle3D(point, vertices[0], vertices[1], vertices[2]);
+  }
+  if (vertices.length < 3) return false;
+  try {
+    const hullGeo = new ConvexGeometry(vertices);
+    const inside = isPointInConvexHullMesh(point, hullGeo);
+    hullGeo.dispose();
+    return inside;
+  } catch(e) {
+    return false;
+  }
+}
+
+/* ===== Scene ===== */
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xffffff);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
+const CAM_HOME = new THREE.Vector3(4.8, 3.2, 6.8);
+camera.position.copy(CAM_HOME);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.075;
+controls.minDistance = 1.4;
+controls.maxDistance = 28;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.9;
+controls.touchRotate = true;
+controls.touchZoom = true;
+controls.touchPan = true;
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0xcccccc, 0.95));
+const keyLight = new THREE.DirectionalLight(0xffffff, 2.8);
+keyLight.position.set(5, 8, 6); scene.add(keyLight);
+const fillLight = new THREE.DirectionalLight(0x99aacc, 1.15);
+fillLight.position.set(-6, -2, -5); scene.add(fillLight);
+const rimLight = new THREE.DirectionalLight(0xcc99aa, 1.0);
+rimLight.position.set(-2, -6, 5); scene.add(rimLight);
+
+/* ===== Axes ===== */
+const AXIS_LEN = 3.2;
+const axesGroup = new THREE.Group();
+scene.add(axesGroup);
+let axesVisible = true;
+
+function makeAxisLabel(text, color) {
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = color;
+  ctx.font = 'bold 84px -apple-system, "Segoe UI", Arial, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, size / 2, size / 2 + 6);
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(0.42, 0.42, 1);
+  return sprite;
+}
+
+(function() {
+  const L = AXIS_LEN, HEAD_LEN = 0.34, HEAD_R = 0.075;
+  const dirs = [
+    { axis: 'x', dir: new THREE.Vector3(1, 0, 0), color: 0xd94a4a, labelColor: '#d94a4a' },
+    { axis: 'y', dir: new THREE.Vector3(0, 0, 1), color: 0x3fae5a, labelColor: '#3fae5a' },
+    { axis: 'z', dir: new THREE.Vector3(0, 1, 0), color: 0x3b6fd6, labelColor: '#3b6fd6' },
+  ];
+  dirs.forEach(({ axis, dir, color, labelColor }) => {
+    const neg = dir.clone().multiplyScalar(-L);
+    const pos = dir.clone().multiplyScalar(L);
+    const lineGeo = new THREE.BufferGeometry().setFromPoints([neg, pos]);
+    axesGroup.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.9 })));
+    const cone = new THREE.Mesh(
+      new THREE.ConeGeometry(HEAD_R, HEAD_LEN, 16),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.1 })
+    );
+    cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+    cone.position.copy(dir.clone().multiplyScalar(L - HEAD_LEN / 2));
+    axesGroup.add(cone);
+    const sprite = makeAxisLabel(axis, labelColor);
+    sprite.position.copy(dir.clone().multiplyScalar(L + 0.28));
+    axesGroup.add(sprite);
+  });
+  axesGroup.add(new THREE.Mesh(new THREE.SphereGeometry(0.032, 16, 16), new THREE.MeshBasicMaterial({ color: 0x888888 })));
+})();
+
+/* ===== 组 ===== */
+const atomGroup     = new THREE.Group();
+const angleGroup    = new THREE.Group();
+const shapeGroup    = new THREE.Group();
+const cloudGroup    = new THREE.Group();
+const lonePairGroup = new THREE.Group();
+scene.add(atomGroup, angleGroup, shapeGroup, cloudGroup, lonePairGroup);
+
+let lonePairVisible = false;
+
+const animItems = [];
+let suppressAnim = false;
+
+function resetAnim() { animItems.length = 0; }
+
+function pushAnimItem(obj, delayMs, durationMs) {
+  if (suppressAnim) return;
+  const isSprite = obj.isSprite === true;
+  if (isSprite) {
+    obj.userData._targetScaleVec = obj.scale.clone();
+    obj.scale.set(0.001, 0.001, 1);
+  } else {
+    obj.userData._targetScaleScalar = obj.scale.x;
+    obj.scale.setScalar(0.001);
+  }
+  const now = performance.now();
+  animItems.push({
+    obj, isSprite,
+    startTime: now + delayMs,
+    endTime: now + delayMs + durationMs,
+  });
+}
+
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+function updateAnim(now) {
+  for (let i = animItems.length - 1; i >= 0; i--) {
+    const item = animItems[i];
+    if (now < item.startTime) continue;
+    const dur = item.endTime - item.startTime;
+    const p = Math.min((now - item.startTime) / dur, 1);
+    const eased = easeOutCubic(p);
+    if (item.isSprite) {
+      const t = item.obj.userData._targetScaleVec;
+      item.obj.scale.set(t.x * eased, t.y * eased, 1);
+    } else {
+      const t = item.obj.userData._targetScaleScalar || 1;
+      item.obj.scale.setScalar(t * eased);
+    }
+    if (p >= 0.999) animItems.splice(i, 1);
+  }
+}
+
+/* ===== 标签 ===== */
+function makeAngleLabel(text, colorHex) {
+  const size = 320;
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const colorStr = '#' + colorHex.toString(16).padStart(6, '0');
+  const padding = 12, rectW = size - padding * 2, rectH = 120;
+  const rectX = padding, rectY = (size - rectH) / 2, r = 36;
+  ctx.beginPath();
+  ctx.moveTo(rectX + r, rectY);
+  ctx.lineTo(rectX + rectW - r, rectY);
+  ctx.quadraticCurveTo(rectX + rectW, rectY, rectX + rectW, rectY + r);
+  ctx.lineTo(rectX + rectW, rectY + rectH - r);
+  ctx.quadraticCurveTo(rectX + rectW, rectY + rectH, rectX + rectW - r, rectY + rectH);
+  ctx.lineTo(rectX + r, rectY + rectH);
+  ctx.quadraticCurveTo(rectX, rectY + rectH, rectX, rectY + rectH - r);
+  ctx.lineTo(rectX, rectY + r);
+  ctx.quadraticCurveTo(rectX, rectY, rectX + r, rectY);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
+  ctx.fill();
+  ctx.lineWidth = 6; ctx.strokeStyle = colorStr; ctx.stroke();
+  const len = text.length;
+  let fontSize = 72;
+  if (len >= 6) fontSize = 62;
+  if (len >= 7) fontSize = 54;
+  ctx.fillStyle = colorStr;
+  ctx.font = `bold ${fontSize}px -apple-system, "Segoe UI", Arial, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, size / 2, size / 2 + 6);
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(0.62, 0.62, 1);
+  return sprite;
+}
+
+function makeOrbitalLabel(text, colorHex) {
+  const height = 64;
+  const width = Math.max(80, 30 + text.length * 30);
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  const colorStr = '#' + colorHex.toString(16).padStart(6, '0');
+  const padding = 4;
+  const rectW = width - padding * 2;
+  const rectH = height - padding * 2;
+  const rectX = padding;
+  const rectY = padding;
+  const r = rectH / 2;
+  ctx.beginPath();
+  ctx.moveTo(rectX + r, rectY);
+  ctx.lineTo(rectX + rectW - r, rectY);
+  ctx.arcTo(rectX + rectW, rectY, rectX + rectW, rectY + r, r);
+  ctx.lineTo(rectX + rectW, rectY + rectH - r);
+  ctx.arcTo(rectX + rectW, rectY + rectH, rectX + rectW - r, rectY + rectH, r);
+  ctx.lineTo(rectX + r, rectY + rectH);
+  ctx.arcTo(rectX, rectY + rectH, rectX, rectY + rectH - r, r);
+  ctx.lineTo(rectX, rectY + r);
+  ctx.arcTo(rectX, rectY, rectX + r, rectY, r);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = colorStr;
+  ctx.stroke();
+  ctx.fillStyle = colorStr;
+  ctx.font = 'bold 34px -apple-system, "Segoe UI", Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, width / 2, height / 2 + 3);
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  const scaleY = 0.22;
+  const scaleX = scaleY * (width / height);
+  sprite.scale.set(scaleX, scaleY, 1);
+  return sprite;
+}
+
+function makeChargeLabel(chargeValue, colorHex) {
+  const abs = Math.abs(chargeValue);
+  const isPositive = chargeValue > 0;
+  let text;
+  if (abs === 1) text = isPositive ? '+' : '−';
+  else text = abs + (isPositive ? '+' : '−');
+  const height = 128;
+  const width = abs === 1 ? 128 : (abs < 10 ? 210 : 280);
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  const colorStr = '#' + colorHex.toString(16).padStart(6, '0');
+  ctx.fillStyle = colorStr;
+  const fontSize = abs === 1 ? 110 : 100;
+  ctx.font = `bold ${fontSize}px -apple-system, "Segoe UI", Arial, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, width / 2, height / 2 + 8);
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  const scaleY = 0.34;
+  const scaleX = scaleY * (width / height);
+  sprite.scale.set(scaleX, scaleY, 1);
+  return sprite;
+}
+
+function disposeRecursively(obj) {
+  if (obj.geometry) obj.geometry.dispose();
+  if (obj.material) {
+    if (obj.material.map) obj.material.map.dispose();
+    obj.material.dispose();
+  }
+  if (obj.children) for (const child of obj.children) disposeRecursively(child);
+}
+
+function clearGroup(group) {
+  while (group.children.length > 0) disposeRecursively(group.children.pop());
+}
+
+function clearAllOverlays() {
+  clearGroup(angleGroup);
+  clearGroup(shapeGroup);
+  clearGroup(cloudGroup);
+  clearGroup(lonePairGroup);
+  animItems.length = 0;
+}
+
+function perpendicularTo(v) {
+  const up = new THREE.Vector3(0, 1, 0);
+  if (Math.abs(v.dot(up)) > 0.9) up.set(1, 0, 0);
+  return up.clone().cross(v).normalize();
+}
+
+function addLabelInCloud(group, text, colorHex, labelPos, delay) {
+  const sprite = makeOrbitalLabel(text, colorHex);
+  sprite.position.copy(labelPos);
+  group.add(sprite);
+  pushAnimItem(sprite, delay, 300);
+}
+
+/* ===== 工具 ===== */
+function periodOf(el) {
+  if (!el) return 2;
+  if (el === 'H' || el === 'He') return 1;
+  if (['Li','Be','B','C','N','O','F','Ne'].includes(el)) return 2;
+  if (['Na','Mg','Al','Si','P','S','Cl','Ar'].includes(el)) return 3;
+  if (['K','Ca','Ga','Ge','As','Se','Br','Kr'].includes(el)) return 4;
+  if (['Rb','Sr','In','Sn','Sb','Te','I','Xe'].includes(el)) return 5;
+  if (['Cs','Ba','Tl','Pb','Bi','Po','At','Rn'].includes(el)) return 6;
+  return 2;
+}
+
+function getHybridLabel(domains) {
+  if (domains === 2) return 'sp';
+  if (domains === 3) return 'sp²';
+  if (domains === 4) return 'sp³';
+  if (domains === 5) return 'sp³d';
+  if (domains === 6) return 'sp³d²';
+  return '';
+}
+
+/* ============================================================
+   孤对电子
+   ============================================================ */
+function drawLonePairsInto(group, dirs, startDelay) {
+  const LP_COLOR = 0x1f1f1f, LP_RADIUS = 0.135, LP_DIST = 1.15, LP_SPLIT = 0.18;
+  dirs.forEach((dir, idx) => {
+    const v = new THREE.Vector3(dir[0], dir[1], dir[2]).normalize();
+    const perp = perpendicularTo(v);
+    const centerPos = v.clone().multiplyScalar(LP_DIST);
+    const pos1 = centerPos.clone().add(perp.clone().multiplyScalar(LP_SPLIT));
+    const pos2 = centerPos.clone().sub(perp.clone().multiplyScalar(LP_SPLIT));
+    const baseDelay = startDelay + idx * 150;
+    [pos1, pos2].forEach((pos, k) => {
+      const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(LP_RADIUS, 20, 16),
+        new THREE.MeshStandardMaterial({ color: LP_COLOR, roughness: 0.55, metalness: 0.05 })
+      );
+      sphere.position.copy(pos);
+      group.add(sphere);
+      pushAnimItem(sphere, baseDelay + k * 60, 320);
+    });
+  });
+}
+
+function drawLonePairCloudsInto(group, dirs, startDelay) {
+  const LP_COLOR = 0x2c2c2c;
+  const lpMat = new THREE.MeshStandardMaterial({
+    color: LP_COLOR, transparent: true, opacity: 0.7,
+    roughness: 0.5, metalness: 0.05, side: THREE.DoubleSide, depthWrite: false,
+  });
+  const zAxis = new THREE.Vector3(0, 0, 1);
+  const lonePairLobeGeo = buildLobeGeometry(0.40, 1.05);
+  const centralPeriod = periodOf(currentMolecule.parsed.central.element);
+  const hybridLabel = getHybridLabel(currentMolecule.geometry.domains);
+  const lpText = `${centralPeriod}${hybridLabel}`;
+  dirs.forEach((dir, idx) => {
+    const v = new THREE.Vector3(dir[0], dir[1], dir[2]).normalize();
+    const lpMesh = new THREE.Mesh(lonePairLobeGeo, lpMat);
+    lpMesh.quaternion.setFromUnitVectors(zAxis, v);
+    lpMesh.position.copy(v.clone().multiplyScalar(0.35));
+    group.add(lpMesh);
+    pushAnimItem(lpMesh, startDelay + idx * 150, 400);
+    const perp = perpendicularTo(v);
+    const lpLabelPos = v.clone().multiplyScalar(0.72).add(perp.clone().multiplyScalar(0.24));
+    addLabelInCloud(group, lpText, LP_COLOR, lpLabelPos, startDelay + 100 + idx * 150);
+  });
+}
+
+function renderLonePairs(animate) {
+  clearGroup(lonePairGroup);
+  if (!lonePairVisible || !currentMolecule) return;
+  const { geometry } = currentMolecule;
+  if (geometry.lonePairDirections.length === 0) return;
+  suppressAnim = !animate;
+  if (viewMode === 'cloud') {
+    drawLonePairCloudsInto(lonePairGroup, geometry.lonePairDirections, 0);
+  } else {
+    drawLonePairsInto(lonePairGroup, geometry.lonePairDirections, 0);
+  }
+  suppressAnim = false;
+}
+
+/* ============================================================
+   清除分子（保留轨道和 viewMode）
+   ============================================================ */
+function clearMoleculeIfExists() {
+  if (!currentMolecule) return false;
+  stopResonance();
+  clearGroup(atomGroup);
+  clearGroup(angleGroup);
+  clearGroup(shapeGroup);
+  clearGroup(cloudGroup);
+  clearGroup(lonePairGroup);
+  animItems.length = 0;
+  currentMolecule = null;
+  geometryDisplay.textContent = '';
+  geometryDisplay.className = 'config-display empty';
+  geometryDisplay.style.color = '';
+  geometryDisplay.style.fontWeight = '';
+  capName.textContent = '';
+  btnResonance.disabled = true;
+  for (const obj of activeMeshes.values()) {
+    obj.visible = (viewMode !== 'angles');
+  }
+  return true;
+}
+
+/* ============================================================
+   1. 原子球
+   ============================================================ */
+function drawAtoms(parsed, geometry, doubleBondIdxSet) {
+  clearGroup(atomGroup);
+  const BOND_LEN = 1.8;
+  const { central, ligands, charge } = parsed;
+  const centralRadius = ATOM_RADII[central.element] || 0.4;
+  const centralColor = CPK_COLORS[central.element] || 0x888888;
+  const centerSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(centralRadius, 32, 24),
+    new THREE.MeshStandardMaterial({ color: centralColor, roughness: 0.35, metalness: 0.1 })
+  );
+  atomGroup.add(centerSphere);
+  const ligandElements = [];
+  ligands.forEach(l => { for (let i = 0; i < l.count; i++) ligandElements.push(l.element); });
+  const ligInfo = computeLigandInfo(ligandElements, doubleBondIdxSet);
+  let totalLigandCharge = 0;
+  ligInfo.forEach(li => totalLigandCharge += li.charge);
+  const centralCharge = charge - totalLigandCharge;
+  geometry.directions.forEach((dir, i) => {
+    const el = ligandElements[i] || ligandElements[ligandElements.length - 1];
+    const radius = ATOM_RADII[el] || 0.35;
+    const color = CPK_COLORS[el] || 0x888888;
+    const v = new THREE.Vector3(dir[0], dir[1], dir[2]).normalize();
+    const sphere = new THREE.Mesh(
+      new THREE.SphereGeometry(radius, 24, 18),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.1 })
+    );
+    sphere.position.copy(v.clone().multiplyScalar(BOND_LEN));
+    atomGroup.add(sphere);
+    if (ligInfo[i] && ligInfo[i].charge !== 0) {
+      const chargeColor = ligInfo[i].charge > 0 ? 0xd94a4a : 0x3b6fd6;
+      const sprite = makeChargeLabel(ligInfo[i].charge, chargeColor);
+      sprite.position.copy(v.clone().multiplyScalar(BOND_LEN + radius + 0.24));
+      atomGroup.add(sprite);
+    }
+  });
+  if (centralCharge !== 0) {
+    const chargeColor = centralCharge > 0 ? 0xd94a4a : 0x3b6fd6;
+    const sprite = makeChargeLabel(centralCharge, chargeColor);
+    sprite.position.set(0, centralRadius + 0.36, 0);
+    atomGroup.add(sprite);
+  }
+}
+
+/* ============================================================
+   2. Angles 模式
+   ============================================================ */
+function drawAnglesOverlay(parsed, geometry, doubleBondIdxSet) {
+  clearGroup(angleGroup);
+  resetAnim();
+  const BOND_LEN = 1.8;
+  const BOND_COLOR = 0x555555;
+  const ligandElements = [];
+  parsed.ligands.forEach(l => { for (let i = 0; i < l.count; i++) ligandElements.push(l.element); });
+  const nLigands = geometry.directions.length;
+  const bondOrders = [];
+  for (let i = 0; i < nLigands; i++) bondOrders.push(doubleBondIdxSet.has(i) ? 2 : 1);
+  geometry.directions.forEach((dir, i) => {
+    const el = ligandElements[i] || ligandElements[ligandElements.length - 1];
+    const radius = ATOM_RADII[el] || 0.35;
+    const v = new THREE.Vector3(dir[0], dir[1], dir[2]).normalize();
+    const arrowLen = BOND_LEN - radius * 0.6;
+    const order = bondOrders[i] || 1;
+    const baseDelay = i * 90;
+    if (order === 1) {
+      const arrow = new THREE.ArrowHelper(v, new THREE.Vector3(0, 0, 0), arrowLen, BOND_COLOR, 0.22, 0.09);
+      angleGroup.add(arrow);
+      pushAnimItem(arrow, baseDelay, 380);
+    } else {
+      const perp = perpendicularTo(v);
+      const offset = 0.075;
+      const a1 = new THREE.ArrowHelper(v, perp.clone().multiplyScalar(offset), arrowLen, BOND_COLOR, 0.22, 0.09);
+      const a2 = new THREE.ArrowHelper(v, perp.clone().multiplyScalar(-offset), arrowLen, BOND_COLOR, 0.22, 0.09);
+      angleGroup.add(a1); angleGroup.add(a2);
+      pushAnimItem(a1, baseDelay, 380);
+      pushAnimItem(a2, baseDelay + 40, 380);
+    }
+  });
+  const labelStart = nLigands * 90 + 150;
+  geometry.pairs.forEach(({ i, j, angle }, k) => {
+    const da = geometry.directions[i], db = geometry.directions[j];
+    if (!da || !db) return;
+    const a = new THREE.Vector3(da[0], da[1], da[2]).normalize();
+    const b = new THREE.Vector3(db[0], db[1], db[2]).normalize();
+    const sum = a.clone().add(b);
+    let labelDir;
+    if (sum.lengthSq() < 0.01) {
+      const perp = new THREE.Vector3(0, 1, 0);
+      if (Math.abs(a.dot(perp)) > 0.9) perp.set(1, 0, 0);
+      labelDir = perp.clone().cross(a).normalize();
+    } else labelDir = sum.normalize();
+    const angleText = formatAngleText(angle, geometry.lonePairs, parsed.central.element, geometry.domains);
+    const sprite = makeAngleLabel(angleText, 0x555555);
+    sprite.position.copy(labelDir.multiplyScalar(BOND_LEN * 0.72));
+    angleGroup.add(sprite);
+    pushAnimItem(sprite, labelStart + k * 120, 400);
+  });
+}
+
+/* ============================================================
+   3. Shape 模式
+   ============================================================ */
+function drawShapeOverlay(parsed, geometry) {
+  clearGroup(shapeGroup);
+  resetAnim();
+  const BOND_LEN = 1.8;
+  const center = new THREE.Vector3(0, 0, 0);
+  const ligandDirs = geometry.directions.map(d => new THREE.Vector3(d[0], d[1], d[2]).normalize());
+  const ligandVerts = ligandDirs.map(v => v.clone().multiplyScalar(BOND_LEN));
+  const N = ligandVerts.length;
+
+  let centerInside = false;
+  if (N >= 3) centerInside = isPointInConvexHull(center, ligandVerts);
+
+  let collinear2 = false;
+  if (N === 2) {
+    const v1 = ligandVerts[0].clone().sub(center);
+    const v2 = ligandVerts[1].clone().sub(center);
+    const cr = new THREE.Vector3().crossVectors(v1, v2);
+    collinear2 = (cr.lengthSq() < 1e-6);
+  }
+
+  const fillMat = new THREE.MeshStandardMaterial({
+    color: 0xcccccc, transparent: true, opacity: 0.25,
+    roughness: 0.6, metalness: 0.0, side: THREE.DoubleSide, depthWrite: false,
+  });
+
+  if (N === 2 && !collinear2) {
+    const fillGeo = new THREE.BufferGeometry();
+    fillGeo.setAttribute('position', new THREE.Float32BufferAttribute([
+      center.x, center.y, center.z,
+      ligandVerts[0].x, ligandVerts[0].y, ligandVerts[0].z,
+      ligandVerts[1].x, ligandVerts[1].y, ligandVerts[1].z,
+    ], 3));
+    fillGeo.setIndex([0, 1, 2]);
+    fillGeo.computeVertexNormals();
+    const fillMesh = new THREE.Mesh(fillGeo, fillMat);
+    shapeGroup.add(fillMesh);
+    pushAnimItem(fillMesh, 0, 500);
+  } else if (N >= 3) {
+    let fillVerts;
+    if (centerInside) fillVerts = ligandVerts;
+    else fillVerts = [center, ...ligandVerts];
+    try {
+      const fillGeo = new ConvexGeometry(fillVerts);
+      const fillMesh = new THREE.Mesh(fillGeo, fillMat);
+      shapeGroup.add(fillMesh);
+      pushAnimItem(fillMesh, 0, 500);
+    } catch(e) {}
+  }
+
+  const edgeMat = new THREE.MeshStandardMaterial({
+    color: 0x666666, transparent: true, opacity: 0.75,
+    roughness: 0.4, metalness: 0.1,
+  });
+
+  let edges = [];
+  if (N === 0) {}
+  else if (N === 1) edges = [[center, ligandVerts[0]]];
+  else if (N === 2) {
+    edges = [
+      [center, ligandVerts[0]],
+      [center, ligandVerts[1]],
+      [ligandVerts[0], ligandVerts[1]],
+    ];
+  } else {
+    if (isCoplanar(ligandVerts)) {
+      const sorted = sortCoplanarVertices(ligandVerts);
+      for (let i = 0; i < sorted.length; i++) {
+        edges.push([sorted[i], sorted[(i + 1) % sorted.length]]);
+      }
+    } else {
+      edges = findPolyhedronEdges(ligandVerts);
+    }
+    if (!centerInside) {
+      ligandVerts.forEach(v => edges.push([center, v]));
+    }
+  }
+
+  edges.forEach(([a, b], k) => {
+    const dir = new THREE.Vector3().subVectors(b, a);
+    const len = dir.length();
+    if (len < 1e-6) return;
+    const cylGeo = new THREE.CylinderGeometry(0.022, 0.022, len, 8);
+    const mesh = new THREE.Mesh(cylGeo, edgeMat);
+    mesh.position.copy(a).add(dir.clone().multiplyScalar(0.5));
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+    shapeGroup.add(mesh);
+    pushAnimItem(mesh, k * 40, 400);
+  });
+}
+
+/* ============================================================
+   4. Cloud 模式
+   ============================================================ */
+function drawCloudOverlay(parsed, geometry, doubleBondIdxSet) {
+  clearGroup(cloudGroup);
+  resetAnim();
+  const BOND_LEN = 1.8;
+  const SIGMA_COLOR = 0x3b82f6;
+  const PI_COLOR = 0xf59e0b;
+  const ligandElements = [];
+  parsed.ligands.forEach(l => { for (let i = 0; i < l.count; i++) ligandElements.push(l.element); });
+  const nLigands = geometry.directions.length;
+  const bondOrders = [];
+  for (let i = 0; i < nLigands; i++) bondOrders.push(doubleBondIdxSet.has(i) ? 2 : 1);
+  const sigmaMat = new THREE.MeshStandardMaterial({
+    color: SIGMA_COLOR, transparent: true, opacity: 0.68,
+    roughness: 0.4, metalness: 0.05, side: THREE.DoubleSide, depthWrite: false,
+  });
+  const piMat = new THREE.MeshStandardMaterial({
+    color: PI_COLOR, transparent: true, opacity: 0.75,
+    roughness: 0.4, metalness: 0.05, side: THREE.DoubleSide, depthWrite: false,
+  });
+  const zAxis = new THREE.Vector3(0, 0, 1);
+  const sigmaLobeGeo = buildLobeGeometry(0.30, 1.05);
+  const ligandLobeGeo = buildLobeGeometry(0.22, 0.72);
+  const centralPeriod = periodOf(parsed.central.element);
+  const hybridLabel = getHybridLabel(geometry.domains);
+  geometry.directions.forEach((dir, i) => {
+    const el = ligandElements[i] || ligandElements[ligandElements.length - 1];
+    const v = new THREE.Vector3(dir[0], dir[1], dir[2]).normalize();
+    const baseDelay = i * 120;
+    const sigmaMesh = new THREE.Mesh(sigmaLobeGeo, sigmaMat);
+    sigmaMesh.quaternion.setFromUnitVectors(zAxis, v);
+    cloudGroup.add(sigmaMesh);
+    pushAnimItem(sigmaMesh, baseDelay, 380);
+    const ligandLobe = new THREE.Mesh(ligandLobeGeo, sigmaMat);
+    ligandLobe.quaternion.setFromUnitVectors(zAxis, v.clone().negate());
+    ligandLobe.position.copy(v.clone().multiplyScalar(BOND_LEN));
+    cloudGroup.add(ligandLobe);
+    pushAnimItem(ligandLobe, baseDelay + 40, 380);
+    const perp1 = perpendicularTo(v);
+    const sigmaCenterText = `${centralPeriod}${hybridLabel}`;
+    const sigmaCenterLabelPos = v.clone().multiplyScalar(0.6).add(perp1.clone().multiplyScalar(0.26));
+    addLabelInCloud(cloudGroup, sigmaCenterText, SIGMA_COLOR, sigmaCenterLabelPos, baseDelay + 220);
+    const ligandPeriod = periodOf(el);
+    const sigmaLigandText = el === 'H' ? `${ligandPeriod}s` : `${ligandPeriod}p`;
+    const sigmaLigandLabelPos = v.clone().multiplyScalar(BOND_LEN - 0.42).add(perp1.clone().multiplyScalar(0.24));
+    addLabelInCloud(cloudGroup, sigmaLigandText, SIGMA_COLOR, sigmaLigandLabelPos, baseDelay + 320);
+    if (bondOrders[i] === 2) {
+      const perp = perpendicularTo(v);
+      const startPos = v.clone().multiplyScalar(0.35);
+      const endPos = v.clone().multiplyScalar(BOND_LEN - 0.35);
+      const piGeo1 = buildPiArc(startPos, endPos, perp, 0.55, 0.1);
+      const piMesh1 = new THREE.Mesh(piGeo1, piMat);
+      cloudGroup.add(piMesh1);
+      pushAnimItem(piMesh1, baseDelay + 100, 420);
+      const piGeo2 = buildPiArc(startPos, endPos, perp.clone().negate(), 0.55, 0.1);
+      const piMesh2 = new THREE.Mesh(piGeo2, piMat);
+      cloudGroup.add(piMesh2);
+      pushAnimItem(piMesh2, baseDelay + 140, 420);
+      const midPoint = startPos.clone().add(endPos).multiplyScalar(0.5);
+      const piLabelPos = midPoint.clone().add(perp.clone().multiplyScalar(0.62));
+      const piText = `${centralPeriod}p`;
+      addLabelInCloud(cloudGroup, piText, PI_COLOR, piLabelPos, baseDelay + 340);
+    }
+  });
+}
+
+/* ============================================================
+   5. 分子几何推理
+   ============================================================ */
+const VALENCE_ELECTRONS = {
+  H:1, He:2, Li:1, Be:2, B:3, C:4, N:5, O:6, F:7, Ne:8,
+  Na:1, Mg:2, Al:3, Si:4, P:5, S:6, Cl:7, Ar:8,
+  K:1, Ca:2, Ga:3, Ge:4, As:5, Se:6, Br:7, Kr:8,
+  Rb:1, Sr:2, In:3, Sn:4, Sb:5, Te:6, I:7, Xe:8,
+  Cs:1, Ba:2, Tl:3, Pb:4, Bi:5, Po:6, At:7, Rn:8,
+};
+
+const CPK_COLORS = {
+  H:0xf0f0f0, C:0x2e2e2e, N:0x3050f8, O:0xff2a2a, F:0x88e058,
+  Cl:0x22cc22, Br:0xa62929, I:0x9900cc, S:0xddcc22, P:0xff8000,
+  B:0xffb5b5, Si:0xf0c8a0, Xe:0x429eb0, Be:0xc2ff00,
+  Se:0xffa100, Te:0xd47a00, As:0xbd80e3, Al:0xbfa6a6,
+  Mg:0x8aff00, Li:0xcc80ff, Na:0xab5cf2, K:0x8f40d4,
+  Ca:0x3dff00, Rb:0x702eb0, Sr:0x00ff00, Cs:0x57178f,
+  Ba:0x00c900, Ge:0x668f8f, Sn:0x668080, Pb:0x575961,
+  Bi:0x9e4fb5, Sb:0x9e63b5, In:0xa67573, Tl:0xa6544d,
+  Ga:0xc28f8f, Po:0xab5c00, At:0x754f45, Rn:0x428296,
+  Ar:0x80d1e3, Kr:0x5cb8d1, Ne:0xb3e3f5, He:0xd9ffff,
+};
+
+const ATOM_RADII = {
+  H:0.22, He:0.20, Li:0.38, Be:0.36, B:0.38, C:0.40, N:0.38, O:0.36, F:0.34, Ne:0.32,
+  Na:0.44, Mg:0.42, Al:0.42, Si:0.44, P:0.44, S:0.44, Cl:0.42, Ar:0.40,
+  K:0.50, Ca:0.48, Ga:0.44, Ge:0.46, As:0.46, Se:0.46, Br:0.46, Kr:0.44,
+  Rb:0.54, Sr:0.52, In:0.50, Sn:0.50, Sb:0.50, Te:0.50, I:0.50, Xe:0.48,
+  Cs:0.58, Ba:0.56, Tl:0.52, Pb:0.52, Bi:0.52, Po:0.52, At:0.52, Rn:0.50,
+};
+
+function parseBinaryFormula(formula) {
+  let s = String(formula).replace(/\s+/g, '');
+  if (!s) return null;
+  let charge = 0;
+  const cm = s.match(/\^(\d*)([+\-])/);
+  if (cm) {
+    const mag = cm[1] ? parseInt(cm[1], 10) : 1;
+    charge = (cm[2] === '-') ? -mag : mag;
+    s = s.replace(/\^(\d*)([+\-])/, '');
+  }
+  const regex = /([A-Z][a-z]?)(\d*)/g;
+  const parts = [];
+  let m;
+  while ((m = regex.exec(s)) !== null) {
+    if (m[1]) parts.push({ element: m[1], count: m[2] ? parseInt(m[2], 10) : 1 });
+  }
+  if (parts.length === 0 || parts.length > 2) return null;
+  let centralIdx = 0;
+  const hIdx = parts.findIndex(p => p.element === 'H');
+  if (hIdx >= 0 && parts.length === 2) {
+    centralIdx = parts.findIndex(p => p.element !== 'H');
+    if (centralIdx < 0) centralIdx = 0;
+  }
+  const central = parts[centralIdx];
+  const ligands = parts.filter((_, i) => i !== centralIdx);
+  if (ligands.length === 0) return null;
+  const ligandCount = ligands.reduce((sum, p) => sum + p.count, 0);
+  return { central, ligands, ligandCount, charge };
+}
+
+const DOUBLE_BOND_CENTER = ['C', 'N', 'O', 'S', 'P', 'Cl', 'Br', 'I', 'Se', 'Te'];
+const PERIOD_2_CENTER = ['B', 'C', 'N', 'O', 'F'];
+
+function inferDoubleBondsAndLonePairs(centralSymbol, ligandElements, charge) {
+  const Vc = VALENCE_ELECTRONS[centralSymbol];
+  const L = ligandElements.length;
+  const result = { doubleBonds: 0, centerLonePairs: 0 };
+  let ligandValence = 0, ligandBaseLP = 0;
+  for (const e of ligandElements) {
+    ligandValence += VALENCE_ELECTRONS[e] || 0;
+    ligandBaseLP += (e === 'H') ? 0 : 3;
+  }
+  const E = Vc + ligandValence - charge;
+  const cRaw = (E - 2 * L - 2 * ligandBaseLP) / 2;
+  if (cRaw < 0 || !Number.isInteger(cRaw)) return result;
+  result.centerLonePairs = cRaw;
+  if (!DOUBLE_BOND_CENTER.includes(centralSymbol)) return result;
+  if (!ligandElements.every(e => e === 'O' || e === 'S' || e === 'Se')) return result;
+  let n = Vc - 2 * cRaw - L;
+  if (n < 0) n = 0;
+  if (n > L) n = L;
+  const maxPairs = PERIOD_2_CENTER.includes(centralSymbol) ? 4 : 6;
+  const maxN = maxPairs - L - cRaw;
+  if (n > maxN) n = maxN;
+  if (n < 0) n = 0;
+  result.doubleBonds = n;
+  return result;
+}
+
+function geometryNameFor(domains, lonePairs) {
+  const map = {
+    '2-0': 'Linear', '3-0': 'Trigonal Planar', '3-1': 'Bent (sp²)',
+    '4-0': 'Tetrahedral', '4-1': 'Trigonal Pyramidal', '4-2': 'Bent (sp³)',
+    '5-0': 'Trigonal Bipyramidal', '5-1': 'Seesaw', '5-2': 'T-shaped', '5-3': 'Linear',
+    '6-0': 'Octahedral', '6-1': 'Square Pyramidal', '6-2': 'Square Planar',
+  };
+  return map[`${domains}-${lonePairs}`] || null;
+}
+
+function geometryDirectionsFor(domains, lonePairs, centralSymbol) {
+  let allDirs, ligandIdx, anglePairs;
+  if (domains === 2) {
+    allDirs = [[0,1,0], [0,-1,0]]; ligandIdx = [0, 1]; anglePairs = [[0, 1, 180]];
+  } else if (domains === 3) {
+    allDirs = [[1,0,0], [-0.5,0,Math.sqrt(3)/2], [-0.5,0,-Math.sqrt(3)/2]];
+    if (lonePairs === 0) { ligandIdx = [0,1,2]; anglePairs = [[0,1,120]]; }
+    else { ligandIdx = [0,1]; anglePairs = [[0,1,120]]; }
+  } else if (domains === 4) {
+    const s = 1 / Math.sqrt(3);
+    allDirs = [[s,s,s],[s,-s,-s],[-s,s,-s],[-s,-s,s]];
+    if (lonePairs === 0) { ligandIdx = [0,1,2,3]; anglePairs = [[0,1,109.5]]; }
+    else if (lonePairs === 1) { ligandIdx = [0,1,2]; anglePairs = [[0,1,109.5]]; }
+    else { ligandIdx = [0,1]; const ba = (centralSymbol === 'O') ? 104.5 : 109.5; anglePairs = [[0,1,ba]]; }
+  } else if (domains === 5) {
+    allDirs = [[0,1,0],[0,-1,0],[1,0,0],[-0.5,0,Math.sqrt(3)/2],[-0.5,0,-Math.sqrt(3)/2]];
+    if (lonePairs === 0) { ligandIdx = [0,1,2,3,4]; anglePairs = [[0,2,90],[2,3,120],[0,1,180]]; }
+    else if (lonePairs === 1) { ligandIdx = [0,1,2,3]; anglePairs = [[0,2,90],[2,3,120],[0,1,180]]; }
+    else if (lonePairs === 2) { ligandIdx = [0,1,2]; anglePairs = [[0,2,90],[0,1,180]]; }
+    else { ligandIdx = [0,1]; anglePairs = [[0,1,180]]; }
+  } else if (domains === 6) {
+    allDirs = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+    if (lonePairs === 0) { ligandIdx = [0,1,2,3,4,5]; anglePairs = [[0,2,90],[0,1,180]]; }
+    else if (lonePairs === 1) { ligandIdx = [0,1,2,3,5]; anglePairs = [[0,2,90],[0,5,90]]; }
+    else { ligandIdx = [0,1,2,3]; anglePairs = [[0,2,90],[0,1,180]]; }
+  } else return null;
+  const directions = ligandIdx.map(i => allDirs[i]);
+  const pairs = anglePairs.map(([i, j, angle]) => ({
+    i: ligandIdx.indexOf(i), j: ligandIdx.indexOf(j), angle,
+  })).filter(p => p.i >= 0 && p.j >= 0);
+  const lpIdx = [];
+  for (let i = 0; i < allDirs.length; i++) if (!ligandIdx.includes(i)) lpIdx.push(i);
+  const lonePairDirections = lpIdx.map(i => allDirs[i]);
+  return { directions, pairs, lonePairDirections };
+}
+
+function inferGeometry(centralSymbol, ligandCount, ligandElements, charge) {
+  if (ligandCount === 1) {
+    return { name: 'Linear (diatomic)', directions: [[0, 1, 0]], pairs: [], lonePairDirections: [], domains: 2, lonePairs: 0, doubleBonds: 0 };
+  }
+  const { doubleBonds, centerLonePairs } = inferDoubleBondsAndLonePairs(centralSymbol, ligandElements, charge);
+  const domains = ligandCount + centerLonePairs;
+  const name = geometryNameFor(domains, centerLonePairs);
+  if (!name) return null;
+  const dirData = geometryDirectionsFor(domains, centerLonePairs, centralSymbol);
+  if (!dirData) return null;
+  return {
+    name, directions: dirData.directions, pairs: dirData.pairs,
+    lonePairDirections: dirData.lonePairDirections,
+    domains, lonePairs: centerLonePairs, doubleBonds,
+  };
+}
+
+function generateResonanceStates(L, n) {
+  if (n === 0) return [[]];
+  const states = [];
+  const chosen = [];
+  function combine(start) {
+    if (chosen.length === n) { states.push([...chosen]); return; }
+    for (let i = start; i < L; i++) { chosen.push(i); combine(i + 1); chosen.pop(); }
+  }
+  combine(0);
+  return states;
+}
+
+function computeLigandInfo(ligandElements, doubleBondIdxSet) {
+  const info = [];
+  for (let i = 0; i < ligandElements.length; i++) {
+    const e = ligandElements[i];
+    const isDouble = doubleBondIdxSet.has(i);
+    const bondOrder = isDouble ? 2 : 1;
+    let lonePairs = 0;
+    const V = VALENCE_ELECTRONS[e] || 0;
+    if (e === 'H') lonePairs = 0;
+    else if (isDouble) lonePairs = 2;
+    else lonePairs = 3;
+    const charge = V - 2 * lonePairs - bondOrder;
+    info.push({ element: e, isDouble, bondOrder, lonePairs, charge });
+  }
+  return info;
+}
+
+function formatAngleText(angleValue, lonePairs, centralSymbol, domains) {
+  const isWater = (centralSymbol === 'O' && domains === 4 && lonePairs === 2);
+  if (isWater) return `${angleValue}°`;
+  if (lonePairs > 0) return `<${angleValue}°`;
+  return `${angleValue}°`;
+}
+
+let currentMolecule = null;
+let resonanceTimer = null;
+
+function stopResonance() {
+  if (resonanceTimer) { clearInterval(resonanceTimer); resonanceTimer = null; }
+  btnResonance.classList.remove('active');
+}
+
+function renderCurrentOverlay(animate) {
+  if (!currentMolecule) return;
+  const { parsed, geometry, resonanceStates, resonanceIndex } = currentMolecule;
+  const state = resonanceStates[resonanceIndex] || [];
+  const idxSet = new Set(state);
+  clearGroup(angleGroup);
+  clearGroup(shapeGroup);
+  clearGroup(cloudGroup);
+  animItems.length = 0;
+  suppressAnim = !animate;
+  if (animate) resetAnim();
+  if (viewMode === 'angles') {
+    drawAnglesOverlay(parsed, geometry, idxSet);
+  } else if (viewMode === 'shape') {
+    drawShapeOverlay(parsed, geometry);
+  } else if (viewMode === 'cloud') {
+    drawCloudOverlay(parsed, geometry, idxSet);
+  }
+  suppressAnim = false;
+  renderLonePairs(animate);
+}
+
+function handleMoleculeDraw() {
+  const formula = moleculeInputEl.value.trim();
+  stopResonance();
+  if (!formula) { geometryDisplay.textContent = ''; geometryDisplay.className = 'config-display empty'; return; }
+  const parsed = parseBinaryFormula(formula);
+  if (!parsed) {
+    geometryDisplay.textContent = `Cannot parse: "${formula}"`;
+    geometryDisplay.className = 'config-display error';
+    return;
+  }
+  const { central, ligandCount } = parsed;
+  if (!(central.element in VALENCE_ELECTRONS)) {
+    geometryDisplay.textContent = `Unknown element: "${central.element}"`;
+    geometryDisplay.className = 'config-display error';
+    return;
+  }
+  const ligandElements = [];
+  parsed.ligands.forEach(l => { for (let i = 0; i < l.count; i++) ligandElements.push(l.element); });
+  const geometry = inferGeometry(central.element, ligandCount, ligandElements, parsed.charge);
+  if (!geometry) {
+    geometryDisplay.textContent = 'Cannot infer geometry';
+    geometryDisplay.className = 'config-display error';
+    return;
+  }
+  const resonanceStates = generateResonanceStates(ligandCount, geometry.doubleBonds);
+  currentMolecule = { parsed, geometry, resonanceStates, resonanceIndex: 0 };
+  clearAllMeshes();
+  for (const obj of activeMeshes.values()) obj.visible = false;
+  clearGroup(angleGroup);
+  clearGroup(shapeGroup);
+  clearGroup(cloudGroup);
+  clearGroup(lonePairGroup);
+  animItems.length = 0;
+  drawAtoms(parsed, geometry, new Set(resonanceStates[0] || []));
+  renderViewRow();
+  renderCurrentOverlay(true);
+  const centerFormula = `${central.element}${central.count > 1 ? toSubscript(central.count) : ''}`;
+  const ligandFormula = parsed.ligands.map(l => `${l.element}${l.count > 1 ? toSubscript(l.count) : ''}`).join('');
+  let chargeLabel = '';
+  if (parsed.charge > 0) chargeLabel = toSuperscript(parsed.charge) + '+';
+  else if (parsed.charge < 0) chargeLabel = toSuperscript(-parsed.charge) + '−';
+  geometryDisplay.textContent = `${geometry.name}`;
+  geometryDisplay.className = 'config-display';
+  geometryDisplay.style.color = '#1a1a1a';
+  geometryDisplay.style.fontWeight = '600';
+  capName.textContent = `${centerFormula}${ligandFormula}${chargeLabel} · ${geometry.name}`;
+  btnResonance.disabled = resonanceStates.length <= 1;
+}
+
+/* ===== 轨道相关 ===== */
+const orbitalMaterial = new THREE.MeshStandardMaterial({
+  vertexColors: true, roughness: 0.34, metalness: 0.16,
+  side: THREE.DoubleSide, flatShading: false, transparent: false, opacity: 1.0,
+});
+const cloudMaterial = new THREE.PointsMaterial({
+  size: 0.022, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.92,
+});
+
+const activeMeshes = new Map();
+const removingMeshes = new Map();
+let viewMode = 'shape';
+
+function makeKey(n, l, m) { return `${n}|${l}|${m}`; }
+
+function makeOrbitalObject(key, l, m, n, isHybrid, typeId) {
+  let geo, material, baseScale;
+  const useCloud = (viewMode === 'cloud');
+  if (isHybrid) {
+    if (useCloud) { geo = buildHybridCloudGeometry(typeId); material = cloudMaterial; }
+    else { geo = buildHybridGeometry(typeId); material = orbitalMaterial; }
+    baseScale = sizeFor(n) * HYBRID_SCALE;
+  } else {
+    if (useCloud) { geo = buildOrbitalCloudGeometry(l, m); material = cloudMaterial; }
+    else { geo = buildOrbitalGeometry(l, m); material = orbitalMaterial; }
+    baseScale = sizeFor(n) * TYPE_RADIUS[l];
+  }
+  const mesh = useCloud ? new THREE.Points(geo, material) : new THREE.Mesh(geo, material);
+  mesh.userData.targetScale = baseScale;
+  mesh.userData.orbInfo = { key, l, m, n, isHybrid, typeId };
+  mesh.scale.setScalar(baseScale * 0.45);
+  mesh.visible = (viewMode !== 'angles');
+  return mesh;
+}
+
+function addOrbitalMesh(key, l, m, n) {
+  if (activeMeshes.has(key)) return;
+  if (removingMeshes.has(key)) {
+    const obj = removingMeshes.get(key);
+    removingMeshes.delete(key);
+    delete obj.userData.removeProgress;
+    obj.userData.targetScale = sizeFor(n) * TYPE_RADIUS[l];
+    obj.visible = (viewMode !== 'angles');
+    activeMeshes.set(key, obj);
+    return;
+  }
+  const obj = makeOrbitalObject(key, l, m, n, false, null);
+  scene.add(obj);
+  activeMeshes.set(key, obj);
+}
+
+function addHybridMesh(key, n, typeId) {
+  if (activeMeshes.has(key)) return;
+  if (removingMeshes.has(key)) {
+    const obj = removingMeshes.get(key);
+    removingMeshes.delete(key);
+    delete obj.userData.removeProgress;
+    obj.userData.targetScale = sizeFor(n) * HYBRID_SCALE;
+    obj.visible = (viewMode !== 'angles');
+    activeMeshes.set(key, obj);
+    return;
+  }
+  const obj = makeOrbitalObject(key, 4, 0, n, true, typeId);
+  scene.add(obj);
+  activeMeshes.set(key, obj);
+}
+
+function removeOrbitalMesh(key) {
+  const obj = activeMeshes.get(key);
+  if (!obj) return;
+  activeMeshes.delete(key);
+  obj.userData.removeProgress = 0;
+  obj.userData.startScale = obj.scale.x;
+  removingMeshes.set(key, obj);
+}
+
+function clearAllMeshes() {
+  for (const [, obj] of activeMeshes) { scene.remove(obj); obj.geometry.dispose(); }
+  activeMeshes.clear();
+  for (const [, obj] of removingMeshes) { scene.remove(obj); obj.geometry.dispose(); }
+  removingMeshes.clear();
+}
+
+function rebuildAllOrbitals() {
+  const infos = [];
+  for (const obj of activeMeshes.values()) infos.push({ ...obj.userData.orbInfo });
+  clearAllMeshes();
+  for (const info of infos) {
+    if (info.isHybrid) addHybridMesh(info.key, info.n, info.typeId);
+    else addOrbitalMesh(info.key, info.l, info.m, info.n);
+  }
+}
+
+/* ===== Definitions ===== */
+const SHELL_ORDER = ['s', 'p', 'd', 'f', 'hybrid'];
+const SHELL_L = { s: 0, p: 1, d: 2, f: 3, hybrid: 4 };
+
+function validTypesFor(n) {
+  const maxL = Math.min(n - 1, 3);
+  return SHELL_ORDER.filter(t => t === 'hybrid' ? n >= 2 : SHELL_L[t] <= maxL);
+}
+
+const ORIENTATIONS = {
+  s: [{ m: 0, html: 's' }],
+  p: [{ m: 0, html: 'p<sub>z</sub>' }, { m: 1, html: 'p<sub>x</sub>' }, { m: -1, html: 'p<sub>y</sub>' }],
+  d: [
+    { m: 0, html: 'd<sub>z²</sub>' }, { m: 1, html: 'd<sub>xz</sub>' }, { m: -1, html: 'd<sub>yz</sub>' },
+    { m: 2, html: 'd<sub>x²−y²</sub>' }, { m: -2, html: 'd<sub>xy</sub>' },
+  ],
+  f: [
+    { m: 0, html: 'f<sub>z³</sub>' }, { m: 1, html: 'f<sub>xz²</sub>' }, { m: -1, html: 'f<sub>yz²</sub>' },
+    { m: 2, html: 'f<sub>z(x²−y²)</sub>' }, { m: -2, html: 'f<sub>xyz</sub>' },
+    { m: 3, html: 'f<sub>x(x²−3y²)</sub>' }, { m: -3, html: 'f<sub>y(3x²−y²)</sub>' },
+  ],
+};
+
+function labelFor(n, l, id) {
+  if (l === 0) return `${n}s`;
+  if (l === 4) {
+    const type = String(id).replace('hybrid-', '');
+    const spec = HYBRID_TYPES[type];
+    return spec ? `${n} ${spec.label}` : `${n} hybrid`;
+  }
+  const o = ORIENTATIONS[SHELL_ORDER[l]].find(x => x.m === Number(id));
+  return o ? `${n}${o.html.replace(/<[^>]+>/g, '')}` : `${n}?`;
+}
+
+/* ===== Element DB ===== */
+const ELEMENTS = [
+  'H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca',
+  'Sc','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr','Rb','Sr','Y','Zr',
+  'Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn','Sb','Te','I','Xe','Cs','Ba','La','Ce','Pr','Nd',
+  'Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb','Lu','Hf','Ta','W','Re','Os','Ir','Pt','Au','Hg',
+  'Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Th','Pa','U','Np','Pu','Am','Cm','Bk','Cf','Es','Fm',
+  'Md','No','Lr','Rf','Db','Sg','Bh','Hs','Mt','Ds','Rg','Cn','Nh','Fl','Mc','Lv','Ts','Og'
+];
+
+const FILL_ORDER = [
+  [1,0,2],[2,0,2],[2,1,6],[3,0,2],[3,1,6],[4,0,2],[3,2,10],[4,1,6],
+  [5,0,2],[4,2,10],[5,1,6],[6,0,2],[4,3,14],[5,2,10],[6,1,6],
+  [7,0,2],[5,3,14],[6,2,10],[7,1,6],
+];
+
+const EXCEPTIONS = {
+  24:[[1,0,2],[2,0,2],[2,1,6],[3,0,2],[3,1,6],[3,2,5],[4,0,1]],
+  29:[[1,0,2],[2,0,2],[2,1,6],[3,0,2],[3,1,6],[3,2,10],[4,0,1]],
+  41:[[1,0,2],[2,0,2],[2,1,6],[3,0,2],[3,1,6],[3,2,10],[4,0,2],[4,1,6],[4,2,4],[5,0,1]],
+  42:[[1,0,2],[2,0,2],[2,1,6],[3,0,2],[3,1,6],[3,2,10],[4,0,2],[4,1,6],[4,2,5],[5,0,1]],
+  44:[[1,0,2],[2,0,2],[2,1,6],[3,0,2],[3,1,6],[3,2,10],[4,0,2],[4,1,6],[4,2,7],[5,0,1]],
+  45:[[1,0,2],[2,0,2],[2,1,6],[3,0,2],[3,1,6],[3,2,10],[4,0,2],[4,1,6],[4,2,8],[5,0,1]],
+  46:[[1,0,2],[2,0,2],[2,1,6],[3,0,2],[3,1,6],[3,2,10],[4,0,2],[4,1,6],[4,2,10]],
+  47:[[1,0,2],[2,0,2],[2,1,6],[3,0,2],[3,1,6],[3,2,10],[4,0,2],[4,1,6],[4,2,10],[5,0,1]],
+  78:[[1,0,2],[2,0,2],[2,1,6],[3,0,2],[3,1,6],[3,2,10],[4,0,2],[4,1,6],[4,2,10],[4,3,14],[5,0,2],[5,1,6],[5,2,9],[6,0,1]],
+  79:[[1,0,2],[2,0,2],[2,1,6],[3,0,2],[3,1,6],[3,2,10],[4,0,2],[4,1,6],[4,2,10],[4,3,14],[5,0,2],[5,1,6],[5,2,10],[6,0,1]],
+};
+
+const SUPERSCRIPTS = { '0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹' };
+const SUBSCRIPTS = { '0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉' };
+const L_LETTERS = ['s', 'p', 'd', 'f'];
+
+function toSuperscript(num) { return String(num).split('').map(d => SUPERSCRIPTS[d]).join(''); }
+function toSubscript(num) { return String(num).split('').map(d => SUBSCRIPTS[d]).join(''); }
+
+function baseConfigurationFor(Z) {
+  if (EXCEPTIONS[Z]) return EXCEPTIONS[Z].map(([n, l, count]) => ({ n, l, count }));
+  const config = [];
+  let remaining = Z;
+  for (const [n, l, cap] of FILL_ORDER) {
+    if (remaining <= 0) break;
+    const count = Math.min(remaining, cap);
+    config.push({ n, l, count });
+    remaining -= count;
+  }
+  return config;
+}
+
+function adjustToElectronCount(baseConfig, targetCount) {
+  const result = baseConfig.map(c => ({ ...c }));
+  let total = result.reduce((s, o) => s + o.count, 0);
+  if (total === targetCount) { result.sort((a,b) => a.n-b.n || a.l-b.l); return result; }
+  if (total > targetCount) {
+    let toRemove = total - targetCount;
+    while (toRemove > 0) {
+      let bestIdx = -1, bestN = -1, bestL = -1;
+      for (let i = 0; i < result.length; i++) {
+        const o = result[i];
+        if (o.count > 0 && (o.n > bestN || (o.n === bestN && o.l > bestL))) {
+          bestN = o.n; bestL = o.l; bestIdx = i;
+        }
+      }
+      if (bestIdx < 0) break;
+      result[bestIdx].count--;
+      toRemove--;
+    }
+    return result.filter(o => o.count > 0).sort((a,b) => a.n-b.n || a.l-b.l);
+  }
+  const config = [];
+  let remaining = targetCount;
+  for (const [n, l, cap] of FILL_ORDER) {
+    if (remaining <= 0) break;
+    const count = Math.min(remaining, cap);
+    config.push({ n, l, count });
+    remaining -= count;
+  }
+  return config;
+}
+
+function getConfiguration(Z, electronCount) { return adjustToElectronCount(baseConfigurationFor(Z), electronCount); }
+
+function isHundSpecial(l, count) {
+  const orbitals = 2 * l + 1;
+  return count === orbitals || count === 2 * orbitals;
+}
+
+function formatConfiguration(config) {
+  return config.map(({ n, l, count }) => {
+    const color = isHundSpecial(l, count) ? '#10b981' : '#ef4444';
+    return `<span style="color: ${color};">${n}${L_LETTERS[l]}${toSuperscript(count)}</span>`;
+  }).join(' ');
+}
+
+function findElementAtomicNumber(input) {
+  const s = String(input).trim();
+  if (!s) return null;
+  const normalized = s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  const idx = ELEMENTS.indexOf(normalized);
+  return idx >= 0 ? idx + 1 : null;
+}
+
+function mValuesFor(l) {
+  if (l === 0) return [0];
+  if (l === 1) return [0, 1, -1];
+  if (l === 2) return [0, 1, -1, 2, -2];
+  if (l === 3) return [0, 1, -1, 2, -2, 3, -3];
+  return [];
+}
+
+/* ===== UI ===== */
+let currentN = 1, currentType = 's';
+
+const nRowEl = document.getElementById('nRow');
+const typeRowEl = document.getElementById('typeRow');
+const orbListEl = document.getElementById('orbList');
+const capName = document.getElementById('capName');
+const labelMlEl = document.getElementById('labelMl');
+const viewRowEl = document.getElementById('viewRow');
+const elementInputEl = document.getElementById('elementInput');
+const chargeInputEl = document.getElementById('chargeInput');
+const btnDraw = document.getElementById('btnDraw');
+const configDisplay = document.getElementById('configDisplay');
+const moleculeInputEl = document.getElementById('moleculeInput');
+const btnMolecule = document.getElementById('btnMolecule');
+const geometryDisplay = document.getElementById('geometryDisplay');
+const btnClear = document.getElementById('btnClear');
+const btnAxes = document.getElementById('btnAxes');
+const btnLonePair = document.getElementById('btnLonePair');
+const btnResonance = document.getElementById('btnResonance');
+
+/* ---- 面板折叠 ---- */
+const panelEl = document.getElementById('panel');
+const panelHandle = document.getElementById('panelHandle');
+panelHandle.addEventListener('click', () => {
+  panelEl.classList.toggle('collapsed');
+});
+
+/* 点击面板内的元素时，如果面板已收起则展开（避免误触后无法操作） */
+panelEl.addEventListener('click', (e) => {
+  if (panelEl.classList.contains('collapsed') && e.target === panelHandle) return;
+}, true);
+
+function countForN(n) {
+  let c = 0;
+  for (const key of activeMeshes.keys()) if (Number(key.split('|')[0]) === n) c++;
+  return c;
+}
+function countForType(type) {
+  const targetL = SHELL_L[type];
+  let c = 0;
+  for (const key of activeMeshes.keys()) {
+    const parts = key.split('|');
+    if (Number(parts[0]) === currentN && Number(parts[1]) === targetL) c++;
+  }
+  return c;
+}
+function attachBadge(btn, count) {
+  if (count > 0) {
+    const badge = document.createElement('span');
+    badge.className = 'count-badge';
+    badge.textContent = count;
+    btn.appendChild(badge);
+  }
+}
+
+function renderNRow() {
+  nRowEl.innerHTML = '';
+  for (let n = 1; n <= 7; n++) {
+    const b = document.createElement('button');
+    b.className = 'n-pill' + (n === currentN ? ' active' : '');
+    b.textContent = n; b.dataset.n = n;
+    attachBadge(b, countForN(n));
+    b.addEventListener('click', () => {
+      if (currentN === n) return;
+      clearMoleculeIfExists();
+      currentN = n;
+      if (!validTypesFor(n).includes(currentType)) currentType = 's';
+      renderAll();
+    });
+    nRowEl.appendChild(b);
+  }
+}
+
+function renderTypeRow() {
+  typeRowEl.innerHTML = '';
+  validTypesFor(currentN).forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'type-pill' + (t === currentType ? ' active' : '');
+    b.textContent = t; b.dataset.type = t;
+    attachBadge(b, countForType(t));
+    b.addEventListener('click', () => {
+      if (currentType === t) return;
+      clearMoleculeIfExists();
+      currentType = t;
+      renderAll();
+    });
+    typeRowEl.appendChild(b);
+  });
+}
+
+function onOrbitalsChanged() {
+  refreshCounts();
+  updateCaption();
+  if (viewMode === 'angles' && !currentMolecule) renderAngleOverlayForHybrid();
+}
+
+function makeOrbButton(key, htmlLabel, n, l, m) {
+  const btn = document.createElement('button');
+  btn.className = 'orb' + (activeMeshes.has(key) ? ' active' : '');
+  btn.innerHTML = htmlLabel;
+  btn.addEventListener('click', () => {
+    clearMoleculeIfExists();
+    if (activeMeshes.has(key)) { removeOrbitalMesh(key); btn.classList.remove('active'); }
+    else { addOrbitalMesh(key, l, m, n); btn.classList.add('active'); }
+    onOrbitalsChanged();
+  });
+  return btn;
+}
+
+function makeHybridButton(key, htmlLabel, n, typeId) {
+  const btn = document.createElement('button');
+  btn.className = 'orb' + (activeMeshes.has(key) ? ' active' : '');
+  btn.innerHTML = htmlLabel;
+  btn.addEventListener('click', () => {
+    clearMoleculeIfExists();
+    if (activeMeshes.has(key)) { removeOrbitalMesh(key); btn.classList.remove('active'); }
+    else { addHybridMesh(key, n, typeId); btn.classList.add('active'); }
+    onOrbitalsChanged();
+  });
+  return btn;
+}
+
+function renderOrbRow() {
+  orbListEl.innerHTML = '';
+  if (currentType === 'hybrid') {
+    Object.keys(HYBRID_TYPES).forEach(typeId => {
+      const spec = HYBRID_TYPES[typeId];
+      if (currentN < spec.nMin) return;
+      orbListEl.appendChild(makeHybridButton(`${currentN}|4|hybrid-${typeId}`, spec.label, currentN, typeId));
+    });
+    return;
+  }
+  const l = SHELL_L[currentType];
+  ORIENTATIONS[currentType].forEach(o => {
+    orbListEl.appendChild(makeOrbButton(makeKey(currentN, l, o.m), `${currentN}${o.html}`, currentN, l, o.m));
+  });
+}
+
+function renderViewRow() {
+  viewRowEl.querySelectorAll('[data-view]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === viewMode);
+  });
+}
+
+function renderAngleOverlayForHybrid() {
+  clearGroup(angleGroup);
+  resetAnim();
+  const activeHybrids = [];
+  for (const key of activeMeshes.keys()) {
+    const parts = key.split('|');
+    if (Number(parts[1]) === 4) {
+      const typeId = parts[2].replace('hybrid-', '');
+      if (!activeHybrids.includes(typeId)) activeHybrids.push(typeId);
+    }
+  }
+  if (activeHybrids.length === 0) { updateCaption(); return; }
+  const ARROW_LEN = 2.5, HEAD_LEN = 0.24, HEAD_W = 0.1, LABEL_DIST = ARROW_LEN * 0.64;
+  const palette = [0x666666, 0x7c5cff, 0x0ea5e9, 0xf59e0b, 0x10b981];
+  activeHybrids.forEach((typeId, idx) => {
+    const spec = HYBRID_TYPES[typeId];
+    const angleSpec = HYBRID_ANGLE_SPECS[typeId];
+    if (!spec || !angleSpec) return;
+    const color = activeHybrids.length === 1 ? 0x555555 : palette[idx % palette.length];
+    const dirs = spec.directions.map(d => new THREE.Vector3(d[0], d[1], d[2]).normalize());
+    dirs.forEach((dir, i) => {
+      const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(0, 0, 0), ARROW_LEN, color, HEAD_LEN, HEAD_W);
+      angleGroup.add(arrow);
+      pushAnimItem(arrow, i * 90, 400);
+    });
+    angleSpec.pairs.forEach((pair, i) => {
+      const a = dirs[pair[0]], b = dirs[pair[1]];
+      const sum = a.clone().add(b);
+      let labelDir;
+      if (sum.lengthSq() < 0.01) {
+        const perp = new THREE.Vector3(0, 1, 0);
+        if (Math.abs(a.dot(perp)) > 0.9) perp.set(1, 0, 0);
+        labelDir = perp.clone().cross(a).normalize();
+      } else labelDir = sum.normalize();
+      const sprite = makeAngleLabel(`${angleSpec.angleValues[i]}°`, color);
+      sprite.position.copy(labelDir.multiplyScalar(LABEL_DIST));
+      angleGroup.add(sprite);
+      pushAnimItem(sprite, dirs.length * 90 + 150 + i * 120, 400);
+    });
+  });
+  updateCaption();
+}
+
+/* ===== View 切换 ===== */
+viewRowEl.querySelectorAll('[data-view]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const newMode = btn.dataset.view;
+    if (newMode === viewMode) return;
+    viewMode = newMode;
+    renderViewRow();
+    if (currentMolecule) {
+      renderCurrentOverlay(true);
+    } else {
+      if (viewMode === 'angles') {
+        for (const obj of activeMeshes.values()) obj.visible = false;
+        clearGroup(shapeGroup);
+        clearGroup(cloudGroup);
+        clearGroup(lonePairGroup);
+        renderAngleOverlayForHybrid();
+      } else {
+        clearGroup(angleGroup);
+        clearGroup(shapeGroup);
+        clearGroup(cloudGroup);
+        clearGroup(lonePairGroup);
+        stopResonance();
+        for (const obj of activeMeshes.values()) obj.visible = true;
+        rebuildAllOrbitals();
+      }
+    }
+    updateCaption();
+  });
+});
+
+function renderAll() {
+  renderNRow(); renderTypeRow(); renderOrbRow(); renderViewRow();
+  labelMlEl.style.display = (currentType === 'hybrid') ? 'none' : '';
+  if (viewMode === 'angles' && !currentMolecule) {
+    renderAngleOverlayForHybrid();
+  } else {
+    updateCaption();
+  }
+}
+
+function refreshCounts() {
+  nRowEl.querySelectorAll('.n-pill').forEach(btn => {
+    const n = Number(btn.dataset.n);
+    const old = btn.querySelector('.count-badge'); if (old) old.remove();
+    attachBadge(btn, countForN(n));
+  });
+  typeRowEl.querySelectorAll('.type-pill').forEach(btn => {
+    const t = btn.dataset.type;
+    const old = btn.querySelector('.count-badge'); if (old) old.remove();
+    attachBadge(btn, countForType(t));
+  });
+}
+
+function updateCaption() {
+  if (viewMode === 'angles') {
+    const hybrids = [];
+    for (const key of activeMeshes.keys()) {
+      const parts = key.split('|');
+      if (Number(parts[1]) === 4) {
+        const typeId = parts[2].replace('hybrid-', '');
+        const spec = HYBRID_TYPES[typeId];
+        if (spec && !hybrids.includes(spec.label)) hybrids.push(spec.label);
+      }
+    }
+    if (hybrids.length === 0) capName.textContent = '';
+    else capName.innerHTML = hybrids.join(' &nbsp;·&nbsp; ');
+    return;
+  }
+  const active = [];
+  for (const key of activeMeshes.keys()) {
+    const parts = key.split('|');
+    active.push({ n: Number(parts[0]), l: Number(parts[1]), id: parts[2] });
+  }
+  if (active.length === 0) { capName.innerHTML = ''; return; }
+  if (active.length <= 3) capName.innerHTML = active.map(o => labelFor(o.n, o.l, o.id)).join(' &nbsp;·&nbsp; ');
+  else capName.textContent = `${active.length} orbitals selected`;
+}
+
+/* ===== Draw config ===== */
+let configAnimStart = 0;
+
+function drawConfiguration(config) {
+  if (viewMode === 'angles') { viewMode = 'shape'; renderViewRow(); }
+  stopResonance();
+  clearAllMeshes();
+  clearAllOverlays();
+  clearGroup(atomGroup);
+  clearGroup(lonePairGroup);
+  currentMolecule = null;
+  geometryDisplay.textContent = '';
+  geometryDisplay.className = 'config-display empty';
+  const keys = [];
+  for (const { n, l } of config) for (const m of mValuesFor(l)) keys.push({ key: makeKey(n, l, m), l, m, n });
+  configAnimStart = performance.now();
+  keys.forEach((item, i) => {
+    const obj = makeOrbitalObject(item.key, item.l, item.m, item.n, false, null);
+    obj.scale.setScalar(0.001);
+    obj.userData.appearDelay = i * 55;
+    scene.add(obj);
+    activeMeshes.set(item.key, obj);
+  });
+  refreshCounts();
+  renderOrbRow();
+  updateCaption();
+}
+
+function handleDraw() {
+  const symbol = elementInputEl.value.trim();
+  if (!symbol) { configDisplay.textContent = ''; configDisplay.className = 'config-display empty'; return; }
+  const Z = findElementAtomicNumber(symbol);
+  if (Z === null) { configDisplay.textContent = `Unknown element: "${symbol}"`; configDisplay.className = 'config-display error'; return; }
+  let charge = 0;
+  const chargeRaw = chargeInputEl.value.trim();
+  if (chargeRaw !== '' && chargeRaw !== '-' && chargeRaw !== '+') {
+    const parsed = parseInt(chargeRaw.replace('+', ''), 10);
+    if (!isNaN(parsed)) charge = parsed;
+  }
+  const electrons = Z - charge;
+  if (electrons <= 0) { configDisplay.textContent = 'No electrons (charge too large)'; configDisplay.className = 'config-display error'; return; }
+  const config = getConfiguration(Z, electrons);
+  const formatted = formatConfiguration(config);
+  let chargeLabel = '';
+  if (charge > 0) chargeLabel = toSuperscript(charge) + '+';
+  else if (charge < 0) chargeLabel = toSuperscript(-charge) + '−';
+  const symClean = symbol.charAt(0).toUpperCase() + symbol.slice(1).toLowerCase();
+  configDisplay.innerHTML = `${symClean}${chargeLabel}  ${formatted}`;
+  configDisplay.className = 'config-display';
+  drawConfiguration(config);
+}
+
+btnDraw.addEventListener('click', handleDraw);
+elementInputEl.addEventListener('keydown', e => { if (e.key === 'Enter') handleDraw(); });
+chargeInputEl.addEventListener('keydown', e => { if (e.key === 'Enter') handleDraw(); });
+
+btnMolecule.addEventListener('click', handleMoleculeDraw);
+moleculeInputEl.addEventListener('keydown', e => { if (e.key === 'Enter') handleMoleculeDraw(); });
+
+btnLonePair.addEventListener('click', () => {
+  lonePairVisible = !lonePairVisible;
+  btnLonePair.classList.toggle('active', lonePairVisible);
+  if (currentMolecule) renderLonePairs(true);
+});
+
+btnResonance.addEventListener('click', () => {
+  if (!currentMolecule || currentMolecule.resonanceStates.length <= 1) return;
+  if (resonanceTimer) {
+    stopResonance();
+  } else {
+    btnResonance.classList.add('active');
+    currentMolecule.resonanceIndex = (currentMolecule.resonanceIndex + 1) % currentMolecule.resonanceStates.length;
+    drawAtoms(currentMolecule.parsed, currentMolecule.geometry,
+      new Set(currentMolecule.resonanceStates[currentMolecule.resonanceIndex] || []));
+    renderCurrentOverlay(false);
+    resonanceTimer = setInterval(() => {
+      if (!currentMolecule || currentMolecule.resonanceStates.length <= 1) { stopResonance(); return; }
+      currentMolecule.resonanceIndex = (currentMolecule.resonanceIndex + 1) % currentMolecule.resonanceStates.length;
+      drawAtoms(currentMolecule.parsed, currentMolecule.geometry,
+        new Set(currentMolecule.resonanceStates[currentMolecule.resonanceIndex] || []));
+      renderCurrentOverlay(false);
+    }, 1000);
+  }
+});
+
+function handleClear() {
+  stopResonance();
+  clearAllMeshes();
+  clearAllOverlays();
+  clearGroup(atomGroup);
+  clearGroup(lonePairGroup);
+  currentMolecule = null;
+  configDisplay.textContent = ''; configDisplay.className = 'config-display empty';
+  elementInputEl.value = ''; chargeInputEl.value = '';
+  geometryDisplay.textContent = ''; geometryDisplay.className = 'config-display empty';
+  geometryDisplay.style.color = ''; geometryDisplay.style.fontWeight = '';
+  moleculeInputEl.value = '';
+  btnLonePair.classList.toggle('active', lonePairVisible);
+  btnResonance.disabled = true;
+  renderAll();
+}
+btnClear.addEventListener('click', handleClear);
+renderAll();
+
+/* ===== Controls ===== */
+const btnRotate = document.getElementById('btnRotate');
+btnRotate.addEventListener('click', () => {
+  controls.autoRotate = !controls.autoRotate;
+  btnRotate.classList.toggle('on', controls.autoRotate);
+});
+document.getElementById('btnReset').addEventListener('click', () => {
+  camera.position.copy(CAM_HOME);
+  controls.target.set(0, 0, 0);
+  controls.update();
+});
+function setAxesVisible(v) { axesVisible = v; axesGroup.visible = v; btnAxes.classList.toggle('on', v); }
+btnAxes.addEventListener('click', () => setAxesVisible(!axesVisible));
+
+/* ===== 动画循环 ===== */
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  const now = performance.now();
+  if (configAnimStart > 0) {
+    const elapsed = now - configAnimStart;
+    let allAppeared = true;
+    for (const obj of activeMeshes.values()) {
+      const delay = obj.userData.appearDelay || 0;
+      const target = obj.userData.targetScale;
+      if (elapsed < delay) { obj.scale.setScalar(0.001); allAppeared = false; continue; }
+      const t = Math.min((elapsed - delay) / 500, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      obj.scale.setScalar(target * eased);
+      if (t < 1) allAppeared = false;
+    }
+    if (allAppeared) configAnimStart = 0;
+  } else {
+    for (const obj of activeMeshes.values()) {
+      const target = obj.userData.targetScale;
+      const cur = obj.scale.x;
+      if (Math.abs(cur - target) > 0.0005) {
+        const next = THREE.MathUtils.lerp(cur, target, 0.13);
+        obj.scale.setScalar(Math.abs(next - target) < 0.002 ? target : next);
+      }
+    }
+  }
+  for (const [key, obj] of removingMeshes) {
+    if (obj.userData.removeProgress === undefined) {
+      obj.userData.removeProgress = 0;
+      obj.userData.startScale = obj.scale.x;
+    }
+    obj.userData.removeProgress += 0.085;
+    const p = Math.min(obj.userData.removeProgress, 1);
+    const s = obj.userData.startScale * (1 - p * p);
+    if (p >= 1 || s < 0.006) { scene.remove(obj); obj.geometry.dispose(); removingMeshes.delete(key); }
+    else obj.scale.setScalar(s);
+  }
+  if (animItems.length > 0) updateAnim(now);
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+});
+</script>
+
+</body>
+</html>
