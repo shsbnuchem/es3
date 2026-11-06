@@ -32,11 +32,10 @@
     background: #ffffff; border: 1px solid #e8e8e8;
     box-shadow: 0 10px 40px rgba(0,0,0,.07); z-index: 10;
     scrollbar-width: thin; scrollbar-color: #cccccc transparent;
+    -webkit-overflow-scrolling: touch;
   }
   .panel::-webkit-scrollbar { width: 5px; }
   .panel::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 4px; }
-  .panel-handle { display: none; }
-  .panel-body { display: contents; }
   .row-label {
     font-size: 10px; font-weight: 700; letter-spacing: 1.2px; color: #a0a0a0;
     text-transform: uppercase; margin: 0 0 6px 3px;
@@ -75,11 +74,17 @@
     font-size: 13px; font-weight: 600; color: #1a1a1a;
     letter-spacing: .3px; margin-bottom: 8px;
   }
-  .mol-buttons { display: flex; gap: 3px; padding: 3px; background: #f4f4f4; border-radius: 10px; margin-bottom: 14px; }
+  #geometryDisplay.hint { color: #cccccc; font-weight: 400; }
+  #geometryDisplay.error { color: #d94a4a; font-weight: 500; }
+  .mol-buttons {
+    display: flex; gap: 3px; padding: 3px; background: #f4f4f4;
+    border-radius: 10px; margin-bottom: 14px;
+  }
   .mol-btn {
-    flex: 1; padding: 8px 6px; border: none; background: transparent;
-    border-radius: 7px; font-family: inherit; font-size: 12px; font-weight: 600;
-    color: #444444; cursor: pointer; transition: all .15s ease; letter-spacing: .3px;
+    flex: 1; position: relative; padding: 8px 6px; border: none;
+    background: transparent; border-radius: 7px; font-family: inherit;
+    font-size: 12px; font-weight: 600; color: #444444; cursor: pointer;
+    transition: all .15s ease; line-height: 1; letter-spacing: .3px;
   }
   .mol-btn:hover { color: #000000; }
   .mol-btn.active { background: #ffffff; color: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,.13); }
@@ -90,26 +95,34 @@
     text-transform: uppercase; font-weight: 700;
   }
   .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #ececec; }
-  .n-row, .type-row { display: flex; gap: 3px; padding: 3px; background: #f4f4f4; border-radius: 10px; margin-bottom: 14px; }
+  .n-row, .type-row {
+    display: flex; gap: 3px; padding: 3px; background: #f4f4f4;
+    border-radius: 10px; margin-bottom: 14px;
+  }
   .n-pill, .type-pill {
     position: relative; flex: 1; min-width: 22px; padding: 7px 3px;
     border: none; background: transparent; border-radius: 7px;
     font-family: inherit; font-size: 12px; font-weight: 600; color: #444444;
     cursor: pointer; transition: all .15s ease; line-height: 1;
   }
-  .type-pill { font-size: 11px; }
+  .type-pill { font-size: 11px; letter-spacing: -0.2px; }
   .n-pill.active, .type-pill.active { background: #ffffff; color: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,.13); }
-  .count-badge {
-    position: absolute; top: -4px; right: -3px; min-width: 14px; height: 14px;
-    line-height: 14px; padding: 0 4px; border-radius: 7px;
-    background: #1a1a1a; color: #ffffff; font-size: 9px; font-weight: 700;
-    pointer-events: none;
+  .n-pill:disabled, .type-pill:disabled {
+    opacity: 0.35; cursor: not-allowed; background: transparent; box-shadow: none; color: #999999;
   }
-  .orb-list { display: flex; flex-wrap: wrap; gap: 6px; min-height: 40px; margin-bottom: 14px; }
+  .count-badge {
+    position: absolute; top: -4px; right: -3px;
+    min-width: 14px; height: 14px; line-height: 14px;
+    padding: 0 4px; border-radius: 7px;
+    background: #1a1a1a; color: #ffffff;
+    font-size: 9px; font-weight: 700;
+    pointer-events: none; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+  .orb-list { display: flex; flex-wrap: wrap; gap: 6px; min-height: 40px; align-content: flex-start; margin-bottom: 14px; }
   button.orb {
     font-family: inherit; font-size: 12.5px; padding: 8px 11px; border-radius: 9px;
     border: 1px solid #e0e0e0; background: #ffffff; color: #444444; cursor: pointer;
-    transition: all .15s ease; white-space: nowrap;
+    transition: all .15s ease; line-height: 1.1; white-space: nowrap;
   }
   button.orb sub { font-size: .7em; }
   button.orb:hover { background: #f5f5f5; border-color: #b0b0b0; color: #1a1a1a; }
@@ -117,109 +130,118 @@
   #btnClear {
     width: 100%; font-family: inherit; font-size: 12.5px; font-weight: 600;
     padding: 10px 14px; border-radius: 10px; border: 1px solid #e0e0e0;
-    background: #ffffff; color: #d94a4a; cursor: pointer; transition: all .18s ease;
+    background: #ffffff; color: #d94a4a; cursor: pointer;
+    transition: all .18s ease; letter-spacing: .3px;
   }
-  #btnClear:hover { background: #fef2f2; border-color: #f0a8a8; }
+  #btnClear:hover { background: #fef2f2; border-color: #f0a8a8; color: #b91c1c; }
   .caption {
     position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
     text-align: center; pointer-events: none; z-index: 5;
-    font-size: 17px; font-weight: 600; color: #1a1a1a;
+    font-size: 17px; font-weight: 600; color: #1a1a1a; letter-spacing: .3px;
     white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis;
   }
+  .caption sub { font-size: .65em; }
   .legend {
     position: fixed; right: 26px; bottom: 28px; display: flex;
     flex-direction: column; gap: 8px; font-size: 11.5px; color: #777777;
     z-index: 5; pointer-events: none;
   }
   .legend div { display: flex; align-items: center; gap: 8px; }
+  .legend.hidden { display: none; }
+  #bondLegend, #legendDynamic { flex-direction: column; gap: 8px; }
+  .bond-icon { flex: none; }
   .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
   .dot.pos { background: #3b82f6; }
   .dot.neg { background: #ef4444; }
-  .dot.sigma { background: #3b82f6; }
-  .dot.pi { background: #f59e0b; }
-  .dot.lp { background: #2c2c2c; }
 
-  /* ============================================================
-     移动端：面板可下拉收起
-     ============================================================ */
+  /* Invalid species feedback */
+  .danger-vignette {
+    position: fixed; inset: 0; z-index: 6; pointer-events: none; opacity: 0;
+    background: radial-gradient(ellipse at center, rgba(220,38,38,0) 62%, rgba(220,38,38,.05) 85%, rgba(220,38,38,.11) 100%);
+    box-shadow: inset 0 0 110px 18px rgba(220,38,38,.20), inset 0 0 300px 70px rgba(220,38,38,.06);
+    transition: opacity .45s ease;
+  }
+  .danger-vignette.show {
+    opacity: 1;
+    animation: dangerPulse 1.2s ease-out, dangerBreathe 2.8s 1.2s ease-in-out infinite;
+  }
+  @keyframes dangerPulse {
+    0% { opacity: .2; }
+    28% { opacity: 1; }
+    100% { opacity: .85; }
+  }
+  @keyframes dangerBreathe {
+    0%, 100% { opacity: .85; }
+    50% { opacity: 1; }
+  }
+  .danger-toast {
+    position: fixed; top: 66px; right: 24px; z-index: 12;
+    display: flex; align-items: flex-start; gap: 10px;
+    max-width: 300px; padding: 12px 16px 12px 13px;
+    background: #ffffff; border: 1px solid #f0cccc; border-left: 3px solid #d94a4a;
+    border-radius: 12px; box-shadow: 0 12px 32px rgba(160, 40, 40, .16);
+    opacity: 0; transform: translateY(-8px); pointer-events: none;
+    transition: opacity .22s ease, transform .22s ease;
+  }
+  .danger-toast.show { opacity: 1; transform: translateY(0); }
+  .danger-toast .icon {
+    flex: none; width: 18px; height: 18px; margin-top: 1px; border-radius: 50%;
+    background: #d94a4a; color: #ffffff; font-size: 12px; font-weight: 700;
+    line-height: 18px; text-align: center;
+  }
+  .danger-toast .title { font-size: 12.5px; font-weight: 700; color: #1a1a1a; letter-spacing: .2px; }
+  .danger-toast .sub { margin-top: 3px; font-size: 11.5px; color: #a06a6a; word-break: break-word; }
   @media (max-width: 760px) {
-    .topbar, .caption, .legend { display: none; }
-    .toolbar { top: 12px; right: 12px; gap: 6px; flex-wrap: wrap; }
+    .danger-toast { top: 72px; right: 10px; max-width: calc(100vw - 20px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .danger-vignette.show { animation: none; }
+  }
+  @media (max-width: 1024px) { .panel { width: 270px; padding: 15px 13px 13px; } }
+  @media (max-width: 760px) {
+    .topbar { display: none; }
+    .toolbar { top: 12px; right: 12px; gap: 6px; flex-wrap: wrap; max-width: calc(100vw - 24px); justify-content: flex-end; }
     button.tool { padding: 7px 10px; font-size: 11px; }
-
     .panel {
       left: 10px; right: 10px; top: auto; bottom: 10px;
-      transform: none; width: auto;
-      max-height: 56vh;
-      padding: 6px 11px 11px;
-      border-radius: 16px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      transition: max-height .32s cubic-bezier(.32,.72,.28,1), padding .32s cubic-bezier(.32,.72,.28,1);
-      scrollbar-width: none;
+      transform: none; width: auto; max-height: 52vh;
+      padding: 12px 11px 11px; border-radius: 16px;
+      box-shadow: 0 -6px 32px rgba(0,0,0,.14);
     }
-    .panel::-webkit-scrollbar { display: none; }
-
-    /* 收起状态：只剩手柄 */
-    .panel.collapsed {
-      max-height: 34px;
-      padding-bottom: 6px;
-    }
-
-    /* 拖拽手柄 */
-    .panel-handle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 22px;
-      flex-shrink: 0;
-      cursor: pointer;
-      touch-action: manipulation;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-    .panel-handle .handle-bar {
-      width: 40px;
-      height: 4px;
-      background: #cfcfcf;
-      border-radius: 2px;
-      transition: background .2s ease;
-    }
-    .panel-handle:active .handle-bar { background: #999999; }
-    .panel.collapsed .panel-handle .handle-bar { background: #b0b0b0; }
-
-    /* 面板内容区 */
-    .panel-body {
-      display: block;
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: thin;
-      scrollbar-color: #cccccc transparent;
-      opacity: 1;
-      transition: opacity .2s ease;
-    }
-    .panel-body::-webkit-scrollbar { width: 3px; }
-    .panel-body::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 4px; }
-    .panel.collapsed .panel-body {
-      opacity: 0;
-      pointer-events: none;
-    }
-
+    .row-label { font-size: 9px; margin-bottom: 5px; letter-spacing: 1px; }
     .n-row, .type-row { margin-bottom: 10px; gap: 2px; padding: 2px; }
     .n-pill, .type-pill { padding: 7px 2px; font-size: 11px; }
     button.orb { padding: 7px 10px; font-size: 12px; }
     .element-input input { padding: 7px 9px; font-size: 12px; }
     #btnDraw, #btnMolecule { padding: 7px 11px; font-size: 12px; }
+    .config-display { font-size: 11px; padding: 8px 10px; }
+    .mol-btn { padding: 7px 4px; font-size: 11px; }
+    .caption, .legend { display: none; }
   }
-
-  /* 桌面端隐藏手柄 */
-  @media (min-width: 761px) {
-    .panel-handle { display: none; }
-    .panel-body { display: contents; }
+  @media (max-width: 380px) {
+    .panel { left: 8px; right: 8px; bottom: 8px; max-height: 55vh; padding: 10px 9px 9px; }
+    .n-pill, .type-pill { padding: 6px 1px; font-size: 10px; }
+    button.orb { padding: 6px 8px; font-size: 11px; }
+    .element-input input { padding: 6px 8px; font-size: 11px; }
+    #btnDraw, #btnMolecule { padding: 6px 9px; font-size: 11px; }
+    button.tool { padding: 6px 8px; font-size: 10px; }
+  }
+  @media (max-height: 520px) and (orientation: landscape) {
+    .topbar, .caption, .legend { display: none; }
+    .toolbar { top: 8px; right: 8px; gap: 5px; }
+    button.tool { padding: 6px 9px; font-size: 10px; }
+    .panel {
+      left: 8px; right: auto; top: 50%; bottom: auto;
+      transform: translateY(-50%); width: 260px;
+      max-height: calc(100vh - 16px); padding: 12px 11px 11px;
+    }
+  }
+  @media (hover: none) and (pointer: coarse) {
+    button.tool:hover, button.orb:hover, .n-pill:hover, .type-pill:hover, .mol-btn:hover {
+      color: inherit; background: inherit; border-color: inherit;
+    }
+    button.orb:hover { background: #ffffff; border-color: #e0e0e0; color: #444444; }
+    button.orb.active:hover { background: #1a1a1a; color: #ffffff; }
   }
 </style>
 </head>
@@ -233,56 +255,72 @@
   <button class="tool" id="btnReset">⌖ Reset View</button>
 </div>
 
-<aside class="panel" id="panel">
-  <div class="panel-handle" id="panelHandle">
-    <span class="handle-bar"></span>
+<div class="danger-vignette" id="dangerVignette" aria-hidden="true"></div>
+<div class="danger-toast" id="dangerToast" role="alert" aria-live="assertive">
+  <span class="icon" aria-hidden="true">!</span>
+  <div>
+    <div class="title">This substance does not exist.</div>
+    <div class="sub" id="dangerToastSub"></div>
   </div>
-  <div class="panel-body" id="panelBody">
-    <div class="row-label">Electron Configuration</div>
-    <div class="element-input">
-      <input type="text" id="elementInput" placeholder="Element" autocomplete="off" spellcheck="false" maxlength="3">
-      <input type="text" id="chargeInput" placeholder="Charge" autocomplete="off" spellcheck="false" maxlength="3">
-      <button id="btnDraw">Draw</button>
-    </div>
-    <div class="config-display empty" id="configDisplay"></div>
+</div>
 
-    <div class="row-label">Molecular Geometry</div>
-    <div class="element-input">
-      <input type="text" id="moleculeInput" placeholder="ABx or ABx^y±" autocomplete="off" spellcheck="false" maxlength="14">
-      <button id="btnMolecule">Draw</button>
-    </div>
-    <div class="config-display empty" id="geometryDisplay"></div>
-
-    <div class="mol-buttons">
-      <button class="mol-btn" id="btnLonePair">Lone Pairs</button>
-      <button class="mol-btn" id="btnResonance">Resonance</button>
-    </div>
-
-    <div class="divider"><span>Manual</span></div>
-    <div class="row-label">Principal (n)</div>
-    <div class="n-row" id="nRow"></div>
-    <div class="row-label">Azimuthal (l)</div>
-    <div class="type-row" id="typeRow"></div>
-    <div class="row-label" id="labelMl">Magnetic (m<sub>l</sub>)</div>
-    <div class="orb-list" id="orbList"></div>
-
-    <div class="row-label">View Mode</div>
-    <div class="n-row" id="viewRow" style="margin-bottom:14px;">
-      <button class="n-pill active" data-view="shape">Shape</button>
-      <button class="n-pill" data-view="cloud">Cloud</button>
-      <button class="n-pill" data-view="angles">Angles</button>
-    </div>
-    <button id="btnClear">Clear All</button>
+<aside class="panel">
+  <div class="row-label">Electron Configuration</div>
+  <div class="element-input">
+    <input type="text" id="elementInput" placeholder="Element" autocomplete="off" spellcheck="false" maxlength="3">
+    <input type="text" id="chargeInput" placeholder="Charge" autocomplete="off" spellcheck="false" maxlength="3">
+    <button id="btnDraw">Draw</button>
   </div>
+  <div class="config-display empty" id="configDisplay"></div>
+
+  <div class="row-label">Molecular Geometry</div>
+  <div class="element-input">
+    <input type="text" id="moleculeInput" placeholder="ABx or ABx^y±" autocomplete="off" spellcheck="false" maxlength="14">
+    <button id="btnMolecule">Draw</button>
+  </div>
+  <div class="config-display empty" id="geometryDisplay"></div>
+
+  <div class="mol-buttons">
+    <button class="mol-btn" id="btnLonePair">Lone Pairs</button>
+    <button class="mol-btn" id="btnResonance">Resonance</button>
+  </div>
+
+  <div class="divider"><span>Manual</span></div>
+  <div class="row-label">Principal (n)</div>
+  <div class="n-row" id="nRow"></div>
+  <div class="row-label">Azimuthal (l)</div>
+  <div class="type-row" id="typeRow"></div>
+  <div class="row-label" id="labelMl">Magnetic (m<sub>l</sub>)</div>
+  <div class="orb-list" id="orbList"></div>
+
+  <div class="row-label">View Mode</div>
+  <div class="n-row" id="viewRow" style="margin-bottom:14px;">
+    <button class="n-pill active" data-view="shape">Shape</button>
+    <button class="n-pill" data-view="cloud">Cloud</button>
+    <button class="n-pill" data-view="angles">Angles</button>
+  </div>
+  <button id="btnClear">Clear All</button>
 </aside>
 
 <div class="caption" id="capName"></div>
-<div class="legend">
-  <div><span class="dot pos"></span>Positive</div>
-  <div><span class="dot neg"></span>Negative</div>
-  <div><span class="dot sigma"></span>σ Bond</div>
-  <div><span class="dot pi"></span>π Bond</div>
-  <div><span class="dot lp"></span>Lone Pair</div>
+<div class="legend hidden">
+  <div id="bondLegend" style="display: none;">
+    <div>
+      <svg class="bond-icon" viewBox="0 0 24 12" width="22" height="11" aria-hidden="true">
+        <ellipse cx="12" cy="6" rx="10" ry="3.4" fill="#4f4f4f"/>
+      </svg>σ bond
+    </div>
+    <div>
+      <svg class="bond-icon" viewBox="0 0 24 14" width="22" height="12" aria-hidden="true">
+        <path d="M3 6 Q12 1 21 6" fill="none" stroke="#6c6c6c" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M3 8 Q12 13 21 8" fill="none" stroke="#6c6c6c" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>π bond
+    </div>
+  </div>
+  <div id="legendDynamic">
+    <div><span class="dot pos"></span>Positive ψ</div>
+    <div><span class="dot neg"></span>Negative ψ</div>
+  </div>
 </div>
 
 <script type="importmap">
@@ -297,9 +335,8 @@
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 
-/* ===== Math ===== */
+/* ===== 1. Math ===== */
 const FACT = [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800];
 const fact = n => FACT[n] ?? 1;
 
@@ -333,8 +370,8 @@ function evalRealSH(l, m, cosTheta, phi) {
 const COLOR_POS = new THREE.Color(0x3b82f6);
 const COLOR_NEG = new THREE.Color(0xef4444);
 
-/* ===== Geometry builders ===== */
-function buildOrbitalGeometry(l, m, thetaSeg = 100, phiSeg = 200) {
+/* ===== 2. Geometry builders ===== */
+function buildOrbitalGeometry(l, m, thetaSeg = 110, phiSeg = 220) {
   const am = Math.abs(m);
   const N = Math.sqrt((2 * l + 1) / (4 * Math.PI) * fact(l - am) / fact(l + am));
   const twoN = Math.SQRT2 * N;
@@ -374,7 +411,9 @@ function buildOrbitalGeometry(l, m, thetaSeg = 100, phiSeg = 200) {
     const st = sinT[i], ct = cosT[i], base = i * cols;
     for (let j = 0; j < cols; j++) {
       const idx = base + j, r = rVal[idx] * scale, k = idx * 3;
-      positions[k] = r * st * cosPhi[j]; positions[k + 1] = r * ct; positions[k + 2] = r * st * sinPhi[j];
+      positions[k]     = r * st * cosPhi[j];
+      positions[k + 1] = r * ct;
+      positions[k + 2] = r * st * sinPhi[j];
       const c = sgn[idx] ? COLOR_POS : COLOR_NEG;
       colors[k] = c.r; colors[k + 1] = c.g; colors[k + 2] = c.b;
     }
@@ -397,7 +436,7 @@ function buildOrbitalGeometry(l, m, thetaSeg = 100, phiSeg = 200) {
   return geo;
 }
 
-function buildOrbitalCloudGeometry(l, m, count = 2500) {
+function buildOrbitalCloudGeometry(l, m, count = 3500) {
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 3);
   const am = Math.abs(m);
@@ -417,7 +456,9 @@ function buildOrbitalCloudGeometry(l, m, count = 2500) {
     attempts++;
     let x, y, z, r2;
     do {
-      x = Math.random() * 2 - 1; y = Math.random() * 2 - 1; z = Math.random() * 2 - 1;
+      x = Math.random() * 2 - 1;
+      y = Math.random() * 2 - 1;
+      z = Math.random() * 2 - 1;
       r2 = x * x + y * y + z * z;
     } while (r2 > 1 || r2 < 1e-6);
     const r = Math.sqrt(r2);
@@ -437,42 +478,6 @@ function buildOrbitalCloudGeometry(l, m, count = 2500) {
   geo.setAttribute('color', new THREE.BufferAttribute(colors.subarray(0, accepted * 3), 3));
   geo.computeBoundingSphere();
   return geo;
-}
-
-function buildLobeGeometry(baseRadius, length, radialSegs = 14, phiSegs = 18) {
-  const positions = [];
-  const indices = [];
-  for (let i = 0; i <= radialSegs; i++) {
-    const t = i / radialSegs;
-    const z = t * length;
-    const r = baseRadius * Math.pow(Math.cos(t * Math.PI / 2), 0.6);
-    for (let j = 0; j <= phiSegs; j++) {
-      const phi = (j / phiSegs) * Math.PI * 2;
-      positions.push(r * Math.cos(phi), r * Math.sin(phi), z);
-    }
-  }
-  const stride = phiSegs + 1;
-  for (let i = 0; i < radialSegs; i++) {
-    for (let j = 0; j < phiSegs; j++) {
-      const a = i * stride + j, b = a + 1, c = a + stride, d = c + 1;
-      indices.push(a, b, d); indices.push(a, d, c);
-    }
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geo.setIndex(indices);
-  geo.computeVertexNormals();
-  geo.computeBoundingSphere();
-  return geo;
-}
-
-function buildPiArc(startPos, endPos, perp, height, tubeRadius = 0.1) {
-  const p0 = startPos.clone();
-  const p1 = startPos.clone().add(perp.clone().multiplyScalar(height * 1.35));
-  const p2 = endPos.clone().add(perp.clone().multiplyScalar(height * 1.35));
-  const p3 = endPos.clone();
-  const curve = new THREE.CubicBezierCurve3(p0, p1, p2, p3);
-  return new THREE.TubeGeometry(curve, 32, tubeRadius, 10, false);
 }
 
 const HYBRID_TYPES = {
@@ -495,13 +500,13 @@ function buildHybridGeometry(typeId) {
   const spec = HYBRID_TYPES[typeId];
   const [a, b] = spec.params;
   const directions = spec.directions;
-  const thetaSeg = 70, phiSeg = 140;
+  const thetaSeg = 80, phiSeg = 160;
   const rows = thetaSeg + 1, cols = phiSeg + 1;
   const leafVerts = rows * cols, leafIndices = thetaSeg * phiSeg * 6;
   const numLeaves = directions.length;
   const positions = new Float32Array(numLeaves * leafVerts * 3);
-  const colors = new Float32Array(numLeaves * leafVerts * 3);
-  const indices = new Uint32Array(numLeaves * leafIndices);
+  const colors    = new Float32Array(numLeaves * leafVerts * 3);
+  const indices   = new Uint32Array(numLeaves * leafIndices);
   let maxR = 1e-9;
   for (let i = 0; i < rows; i++) {
     const theta = (i / thetaSeg) * Math.PI;
@@ -581,159 +586,7 @@ function sizeFor(n) { return 0.32 + (n - 1) * 0.11; }
 const TYPE_RADIUS = [1.0, 1.55, 2.15, 2.8];
 const HYBRID_SCALE = 1.3;
 
-/* ===== 几何工具 ===== */
-function isCoplanar(vertices, epsilon = 0.05) {
-  const n = vertices.length;
-  if (n < 4) return true;
-  let normal = null;
-  for (let i = 1; i < n && !normal; i++) {
-    for (let j = i + 1; j < n && !normal; j++) {
-      const v1 = vertices[i].clone().sub(vertices[0]);
-      const v2 = vertices[j].clone().sub(vertices[0]);
-      const cr = new THREE.Vector3().crossVectors(v1, v2);
-      if (cr.lengthSq() > 1e-8) normal = cr.normalize();
-    }
-  }
-  if (!normal) return true;
-  for (let i = 1; i < n; i++) {
-    const d = Math.abs(vertices[i].clone().sub(vertices[0]).dot(normal));
-    if (d > epsilon) return false;
-  }
-  return true;
-}
-
-function sortCoplanarVertices(vertices) {
-  const n = vertices.length;
-  if (n < 3) return vertices.slice();
-  const centroid = new THREE.Vector3();
-  vertices.forEach(v => centroid.add(v));
-  centroid.divideScalar(n);
-  let normal = null;
-  for (let i = 1; i < n && !normal; i++) {
-    for (let j = i + 1; j < n && !normal; j++) {
-      const v1 = vertices[i].clone().sub(vertices[0]);
-      const v2 = vertices[j].clone().sub(vertices[0]);
-      const cr = new THREE.Vector3().crossVectors(v1, v2);
-      if (cr.lengthSq() > 1e-8) normal = cr.normalize();
-    }
-  }
-  if (!normal) return vertices.slice();
-  const ref1 = vertices[0].clone().sub(centroid);
-  ref1.sub(normal.clone().multiplyScalar(ref1.dot(normal)));
-  if (ref1.lengthSq() < 1e-8) ref1.set(1, 0, 0);
-  ref1.normalize();
-  const ref2 = new THREE.Vector3().crossVectors(normal, ref1).normalize();
-  return vertices.slice().sort((a, b) => {
-    const va = a.clone().sub(centroid);
-    const vb = b.clone().sub(centroid);
-    return Math.atan2(va.dot(ref2), va.dot(ref1)) - Math.atan2(vb.dot(ref2), vb.dot(ref1));
-  });
-}
-
-function findPolyhedronEdges(vertices) {
-  const n = vertices.length;
-  const edges = [];
-  for (let i = 0; i < n; i++) {
-    for (let j = i + 1; j < n; j++) {
-      const a = vertices[i];
-      const b = vertices[j];
-      const ab = b.clone().sub(a);
-      if (ab.lengthSq() < 1e-10) continue;
-      let isEdge = false;
-      for (let k = 0; k < n; k++) {
-        if (k === i || k === j) continue;
-        const ac = vertices[k].clone().sub(a);
-        const normal = new THREE.Vector3().crossVectors(ab, ac);
-        if (normal.lengthSq() < 1e-10) continue;
-        normal.normalize();
-        let hasPos = false, hasNeg = false;
-        for (let m = 0; m < n; m++) {
-          if (m === i || m === j || m === k) continue;
-          const side = vertices[m].clone().sub(a).dot(normal);
-          if (side > 1e-5) hasPos = true;
-          if (side < -1e-5) hasNeg = true;
-        }
-        if (!hasPos || !hasNeg) { isEdge = true; break; }
-      }
-      if (isEdge) edges.push([a, b]);
-    }
-  }
-  return edges;
-}
-
-function isPointInTriangle3D(p, a, b, c, epsilon = 1e-4) {
-  const ab = new THREE.Vector3().subVectors(b, a);
-  const ac = new THREE.Vector3().subVectors(c, a);
-  let normal = new THREE.Vector3().crossVectors(ab, ac);
-  if (normal.lengthSq() < 1e-10) return false;
-  normal.normalize();
-  const dPlane = new THREE.Vector3().subVectors(p, a).dot(normal);
-  if (Math.abs(dPlane) > epsilon) return false;
-  const v0 = new THREE.Vector3().subVectors(c, a);
-  const v1 = new THREE.Vector3().subVectors(b, a);
-  const v2 = new THREE.Vector3().subVectors(p, a);
-  const dot00 = v0.dot(v0);
-  const dot01 = v0.dot(v1);
-  const dot02 = v0.dot(v2);
-  const dot11 = v1.dot(v1);
-  const dot12 = v1.dot(v2);
-  const invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
-  const u = (dot11 * dot02 - dot01 * dot12) * invDenom;
-  const v = (dot00 * dot12 - dot01 * dot02) * invDenom;
-  return (u >= -epsilon) && (v >= -epsilon) && (u + v <= 1 + epsilon);
-}
-
-function isPointInConvexHullMesh(point, hullGeo, epsilon = 1e-4) {
-  const pos = hullGeo.attributes.position;
-  const idx = hullGeo.index;
-  if (!idx) return false;
-  const hullCentroid = new THREE.Vector3();
-  const n = pos.count;
-  for (let i = 0; i < n; i++) {
-    hullCentroid.x += pos.getX(i);
-    hullCentroid.y += pos.getY(i);
-    hullCentroid.z += pos.getZ(i);
-  }
-  hullCentroid.divideScalar(n);
-  const faceCount = idx.count / 3;
-  for (let f = 0; f < faceCount; f++) {
-    const ia = idx.getX(f*3);
-    const ib = idx.getX(f*3+1);
-    const ic = idx.getX(f*3+2);
-    const a = new THREE.Vector3(pos.getX(ia), pos.getY(ia), pos.getZ(ia));
-    const b = new THREE.Vector3(pos.getX(ib), pos.getY(ib), pos.getZ(ib));
-    const c = new THREE.Vector3(pos.getX(ic), pos.getY(ic), pos.getZ(ic));
-    const ab = new THREE.Vector3().subVectors(b, a);
-    const ac = new THREE.Vector3().subVectors(c, a);
-    const normal = new THREE.Vector3().crossVectors(ab, ac);
-    if (normal.lengthSq() < 1e-10) continue;
-    normal.normalize();
-    const faceCentroid = new THREE.Vector3().addVectors(a, b).add(c).divideScalar(3);
-    if (normal.dot(new THREE.Vector3().subVectors(hullCentroid, faceCentroid)) > 0) {
-      normal.negate();
-    }
-    const dist = new THREE.Vector3().subVectors(point, a).dot(normal);
-    if (dist > epsilon) return false;
-  }
-  return true;
-}
-
-function isPointInConvexHull(point, vertices) {
-  if (vertices.length === 3) {
-    return isPointInTriangle3D(point, vertices[0], vertices[1], vertices[2]);
-  }
-  if (vertices.length < 3) return false;
-  try {
-    const hullGeo = new ConvexGeometry(vertices);
-    const inside = isPointInConvexHullMesh(point, hullGeo);
-    hullGeo.dispose();
-    return inside;
-  } catch(e) {
-    return false;
-  }
-}
-
-/* ===== Scene ===== */
+/* ===== 3. Three.js scene ===== */
 const container = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -750,10 +603,13 @@ camera.position.copy(CAM_HOME);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.075;
+controls.rotateSpeed = 0.9;
 controls.minDistance = 1.4;
 controls.maxDistance = 28;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.9;
+controls.enablePan = true;
+controls.panSpeed = 0.8;
 controls.touchRotate = true;
 controls.touchZoom = true;
 controls.touchPan = true;
@@ -766,7 +622,7 @@ fillLight.position.set(-6, -2, -5); scene.add(fillLight);
 const rimLight = new THREE.DirectionalLight(0xcc99aa, 1.0);
 rimLight.position.set(-2, -6, 5); scene.add(rimLight);
 
-/* ===== Axes ===== */
+/* ===== 4. Axes ===== */
 const AXIS_LEN = 3.2;
 const axesGroup = new THREE.Group();
 scene.add(axesGroup);
@@ -777,18 +633,20 @@ function makeAxisLabel(text, color) {
   const canvas = document.createElement('canvas');
   canvas.width = size; canvas.height = size;
   const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, size, size);
   ctx.fillStyle = color;
   ctx.font = 'bold 84px -apple-system, "Segoe UI", Arial, sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(text, size / 2, size / 2 + 6);
   const tex = new THREE.CanvasTexture(canvas);
+  tex.anisotropy = 4; tex.needsUpdate = true;
   const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false });
   const sprite = new THREE.Sprite(mat);
   sprite.scale.set(0.42, 0.42, 1);
   return sprite;
 }
 
-(function() {
+(function addAxesWithArrows() {
   const L = AXIS_LEN, HEAD_LEN = 0.34, HEAD_R = 0.075;
   const dirs = [
     { axis: 'x', dir: new THREE.Vector3(1, 0, 0), color: 0xd94a4a, labelColor: '#d94a4a' },
@@ -811,24 +669,24 @@ function makeAxisLabel(text, color) {
     sprite.position.copy(dir.clone().multiplyScalar(L + 0.28));
     axesGroup.add(sprite);
   });
-  axesGroup.add(new THREE.Mesh(new THREE.SphereGeometry(0.032, 16, 16), new THREE.MeshBasicMaterial({ color: 0x888888 })));
+  axesGroup.add(new THREE.Mesh(
+    new THREE.SphereGeometry(0.032, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0x888888 })
+  ));
 })();
 
-/* ===== 组 ===== */
-const atomGroup     = new THREE.Group();
-const angleGroup    = new THREE.Group();
-const shapeGroup    = new THREE.Group();
-const cloudGroup    = new THREE.Group();
+/* ===== 5. Overlay groups ===== */
+const angleGroup = new THREE.Group();
+scene.add(angleGroup);
 const lonePairGroup = new THREE.Group();
-scene.add(atomGroup, angleGroup, shapeGroup, cloudGroup, lonePairGroup);
-
+scene.add(lonePairGroup);
 let lonePairVisible = false;
 
-const animItems = [];
+const angleAnimItems = [];
+let angleAnimStart = 0;
 let suppressAnim = false;
 
-function resetAnim() { animItems.length = 0; }
-
+function resetAngleAnim() { angleAnimItems.length = 0; angleAnimStart = performance.now(); }
 function pushAnimItem(obj, delayMs, durationMs) {
   if (suppressAnim) return;
   const isSprite = obj.isSprite === true;
@@ -836,46 +694,53 @@ function pushAnimItem(obj, delayMs, durationMs) {
     obj.userData._targetScaleVec = obj.scale.clone();
     obj.scale.set(0.001, 0.001, 1);
   } else {
-    obj.userData._targetScaleScalar = obj.scale.x;
+    obj.userData._baseScale = obj.scale.clone();
     obj.scale.setScalar(0.001);
   }
-  const now = performance.now();
-  animItems.push({
-    obj, isSprite,
-    startTime: now + delayMs,
-    endTime: now + delayMs + durationMs,
-  });
+  angleAnimItems.push({ obj, delay: delayMs, duration: durationMs, isSprite });
 }
-
 function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
-function updateAnim(now) {
-  for (let i = animItems.length - 1; i >= 0; i--) {
-    const item = animItems[i];
-    if (now < item.startTime) continue;
-    const dur = item.endTime - item.startTime;
-    const p = Math.min((now - item.startTime) / dur, 1);
+// π 键切换时的透明度渐变
+const opacityTweens = [];
+function fadeMaterial(material, to, duration) {
+  opacityTweens.push({ material, from: material.opacity, to, start: performance.now(), duration });
+}
+function updateOpacityTweens(now) {
+  for (let i = opacityTweens.length - 1; i >= 0; i--) {
+    const item = opacityTweens[i];
+    const p = Math.min((now - item.start) / item.duration, 1);
+    item.material.opacity = item.from + (item.to - item.from) * p;
+    if (p >= 1) opacityTweens.splice(i, 1);
+  }
+}
+function updateAngleAnim(now) {
+  const t = now - angleAnimStart;
+  for (const item of angleAnimItems) {
+    const elapsed = t - item.delay;
+    if (elapsed <= 0) continue;
+    const p = Math.min(elapsed / item.duration, 1);
     const eased = easeOutCubic(p);
     if (item.isSprite) {
-      const t = item.obj.userData._targetScaleVec;
-      item.obj.scale.set(t.x * eased, t.y * eased, 1);
+      const target = item.obj.userData._targetScaleVec;
+      item.obj.scale.set(target.x * eased, target.y * eased, 1);
     } else {
-      const t = item.obj.userData._targetScaleScalar || 1;
-      item.obj.scale.setScalar(t * eased);
+      const base = item.obj.userData._baseScale;
+      if (base) item.obj.scale.set(base.x * eased, base.y * eased, base.z * eased);
+      else item.obj.scale.setScalar(eased);
     }
-    if (p >= 0.999) animItems.splice(i, 1);
   }
 }
 
-/* ===== 标签 ===== */
 function makeAngleLabel(text, colorHex) {
-  const size = 320;
+  const size = 256;
   const canvas = document.createElement('canvas');
   canvas.width = size; canvas.height = size;
   const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, size, size);
   const colorStr = '#' + colorHex.toString(16).padStart(6, '0');
-  const padding = 12, rectW = size - padding * 2, rectH = 120;
-  const rectX = padding, rectY = (size - rectH) / 2, r = 36;
+  const padding = 12, rectW = size - padding * 2, rectH = 110;
+  const rectX = padding, rectY = (size - rectH) / 2, r = 34;
   ctx.beginPath();
   ctx.moveTo(rectX + r, rectY);
   ctx.lineTo(rectX + rectW - r, rectY);
@@ -890,87 +755,34 @@ function makeAngleLabel(text, colorHex) {
   ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
   ctx.fill();
   ctx.lineWidth = 6; ctx.strokeStyle = colorStr; ctx.stroke();
-  const len = text.length;
-  let fontSize = 72;
-  if (len >= 6) fontSize = 62;
-  if (len >= 7) fontSize = 54;
   ctx.fillStyle = colorStr;
-  ctx.font = `bold ${fontSize}px -apple-system, "Segoe UI", Arial, sans-serif`;
+  ctx.font = 'bold 66px -apple-system, "Segoe UI", Arial, sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(text, size / 2, size / 2 + 6);
   const tex = new THREE.CanvasTexture(canvas);
+  tex.anisotropy = 4; tex.needsUpdate = true;
   const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false });
   const sprite = new THREE.Sprite(mat);
   sprite.scale.set(0.62, 0.62, 1);
   return sprite;
 }
 
-function makeOrbitalLabel(text, colorHex) {
-  const height = 64;
-  const width = Math.max(80, 30 + text.length * 30);
+function makeChargeLabel(text, colorHex, scale = 0.34) {
+  const size = 128;
   const canvas = document.createElement('canvas');
-  canvas.width = width; canvas.height = height;
+  canvas.width = size; canvas.height = size;
   const ctx = canvas.getContext('2d');
-  const colorStr = '#' + colorHex.toString(16).padStart(6, '0');
-  const padding = 4;
-  const rectW = width - padding * 2;
-  const rectH = height - padding * 2;
-  const rectX = padding;
-  const rectY = padding;
-  const r = rectH / 2;
-  ctx.beginPath();
-  ctx.moveTo(rectX + r, rectY);
-  ctx.lineTo(rectX + rectW - r, rectY);
-  ctx.arcTo(rectX + rectW, rectY, rectX + rectW, rectY + r, r);
-  ctx.lineTo(rectX + rectW, rectY + rectH - r);
-  ctx.arcTo(rectX + rectW, rectY + rectH, rectX + rectW - r, rectY + rectH, r);
-  ctx.lineTo(rectX + r, rectY + rectH);
-  ctx.arcTo(rectX, rectY + rectH, rectX, rectY + rectH - r, r);
-  ctx.lineTo(rectX, rectY + r);
-  ctx.arcTo(rectX, rectY, rectX + r, rectY, r);
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
-  ctx.fill();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = colorStr;
-  ctx.stroke();
-  ctx.fillStyle = colorStr;
-  ctx.font = 'bold 34px -apple-system, "Segoe UI", Arial, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(text, width / 2, height / 2 + 3);
-  const tex = new THREE.CanvasTexture(canvas);
-  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false });
-  const sprite = new THREE.Sprite(mat);
-  const scaleY = 0.22;
-  const scaleX = scaleY * (width / height);
-  sprite.scale.set(scaleX, scaleY, 1);
-  return sprite;
-}
-
-function makeChargeLabel(chargeValue, colorHex) {
-  const abs = Math.abs(chargeValue);
-  const isPositive = chargeValue > 0;
-  let text;
-  if (abs === 1) text = isPositive ? '+' : '−';
-  else text = abs + (isPositive ? '+' : '−');
-  const height = 128;
-  const width = abs === 1 ? 128 : (abs < 10 ? 210 : 280);
-  const canvas = document.createElement('canvas');
-  canvas.width = width; canvas.height = height;
-  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, size, size);
   const colorStr = '#' + colorHex.toString(16).padStart(6, '0');
   ctx.fillStyle = colorStr;
-  const fontSize = abs === 1 ? 110 : 100;
-  ctx.font = `bold ${fontSize}px -apple-system, "Segoe UI", Arial, sans-serif`;
+  ctx.font = 'bold 110px -apple-system, "Segoe UI", Arial, sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(text, width / 2, height / 2 + 8);
+  ctx.fillText(text, size / 2, size / 2 + 8);
   const tex = new THREE.CanvasTexture(canvas);
+  tex.anisotropy = 4; tex.needsUpdate = true;
   const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false });
   const sprite = new THREE.Sprite(mat);
-  const scaleY = 0.34;
-  const scaleX = scaleY * (width / height);
-  sprite.scale.set(scaleX, scaleY, 1);
+  sprite.scale.set(scale, scale, 1);
   return sprite;
 }
 
@@ -983,671 +795,56 @@ function disposeRecursively(obj) {
   if (obj.children) for (const child of obj.children) disposeRecursively(child);
 }
 
-function clearGroup(group) {
-  while (group.children.length > 0) disposeRecursively(group.children.pop());
+function clearAngleOverlay() {
+  while (angleGroup.children.length > 0) disposeRecursively(angleGroup.children.pop());
+  while (lonePairGroup.children.length > 0) disposeRecursively(lonePairGroup.children.pop());
+  angleAnimItems.length = 0;
 }
 
-function clearAllOverlays() {
-  clearGroup(angleGroup);
-  clearGroup(shapeGroup);
-  clearGroup(cloudGroup);
-  clearGroup(lonePairGroup);
-  animItems.length = 0;
-}
-
-function perpendicularTo(v) {
-  const up = new THREE.Vector3(0, 1, 0);
-  if (Math.abs(v.dot(up)) > 0.9) up.set(1, 0, 0);
-  return up.clone().cross(v).normalize();
-}
-
-function addLabelInCloud(group, text, colorHex, labelPos, delay) {
-  const sprite = makeOrbitalLabel(text, colorHex);
-  sprite.position.copy(labelPos);
-  group.add(sprite);
-  pushAnimItem(sprite, delay, 300);
-}
-
-/* ===== 工具 ===== */
-function periodOf(el) {
-  if (!el) return 2;
-  if (el === 'H' || el === 'He') return 1;
-  if (['Li','Be','B','C','N','O','F','Ne'].includes(el)) return 2;
-  if (['Na','Mg','Al','Si','P','S','Cl','Ar'].includes(el)) return 3;
-  if (['K','Ca','Ga','Ge','As','Se','Br','Kr'].includes(el)) return 4;
-  if (['Rb','Sr','In','Sn','Sb','Te','I','Xe'].includes(el)) return 5;
-  if (['Cs','Ba','Tl','Pb','Bi','Po','At','Rn'].includes(el)) return 6;
-  return 2;
-}
-
-function getHybridLabel(domains) {
-  if (domains === 2) return 'sp';
-  if (domains === 3) return 'sp²';
-  if (domains === 4) return 'sp³';
-  if (domains === 5) return 'sp³d';
-  if (domains === 6) return 'sp³d²';
-  return '';
-}
-
-/* ============================================================
-   孤对电子
-   ============================================================ */
-function drawLonePairsInto(group, dirs, startDelay) {
-  const LP_COLOR = 0x1f1f1f, LP_RADIUS = 0.135, LP_DIST = 1.15, LP_SPLIT = 0.18;
-  dirs.forEach((dir, idx) => {
-    const v = new THREE.Vector3(dir[0], dir[1], dir[2]).normalize();
-    const perp = perpendicularTo(v);
-    const centerPos = v.clone().multiplyScalar(LP_DIST);
-    const pos1 = centerPos.clone().add(perp.clone().multiplyScalar(LP_SPLIT));
-    const pos2 = centerPos.clone().sub(perp.clone().multiplyScalar(LP_SPLIT));
-    const baseDelay = startDelay + idx * 150;
-    [pos1, pos2].forEach((pos, k) => {
-      const sphere = new THREE.Mesh(
-        new THREE.SphereGeometry(LP_RADIUS, 20, 16),
-        new THREE.MeshStandardMaterial({ color: LP_COLOR, roughness: 0.55, metalness: 0.05 })
-      );
-      sphere.position.copy(pos);
-      group.add(sphere);
-      pushAnimItem(sphere, baseDelay + k * 60, 320);
+function renderAngleOverlay() {
+  clearAngleOverlay();
+  resetAngleAnim();
+  const activeHybrids = [];
+  for (const key of activeMeshes.keys()) {
+    const parts = key.split('|');
+    if (Number(parts[1]) === 4) {
+      const typeId = parts[2].replace('hybrid-', '');
+      if (!activeHybrids.includes(typeId)) activeHybrids.push(typeId);
+    }
+  }
+  if (activeHybrids.length === 0) { updateCaption(); return; }
+  const ARROW_LEN = 2.5, ARROW_HEAD_LEN = 0.24, ARROW_HEAD_WIDTH = 0.1, LABEL_DIST = ARROW_LEN * 0.64;
+  const palette = [0x666666, 0x7c5cff, 0x0ea5e9, 0xf59e0b, 0x10b981];
+  activeHybrids.forEach((typeId, idx) => {
+    const spec = HYBRID_TYPES[typeId];
+    const angleSpec = HYBRID_ANGLE_SPECS[typeId];
+    if (!spec || !angleSpec) return;
+    const color = activeHybrids.length === 1 ? 0x555555 : palette[idx % palette.length];
+    const dirs = spec.directions.map(d => new THREE.Vector3(d[0], d[1], d[2]).normalize());
+    dirs.forEach((dir, i) => {
+      const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(0, 0, 0), ARROW_LEN, color, ARROW_HEAD_LEN, ARROW_HEAD_WIDTH);
+      angleGroup.add(arrow);
+      pushAnimItem(arrow, i * 90, 400);
+    });
+    angleSpec.pairs.forEach((pair, i) => {
+      const a = dirs[pair[0]], b = dirs[pair[1]];
+      const sum = a.clone().add(b);
+      let labelDir;
+      if (sum.lengthSq() < 0.01) {
+        const perp = new THREE.Vector3(0, 1, 0);
+        if (Math.abs(a.dot(perp)) > 0.9) perp.set(1, 0, 0);
+        labelDir = perp.clone().cross(a).normalize();
+      } else labelDir = sum.normalize();
+      const sprite = makeAngleLabel(`${angleSpec.angleValues[i]}°`, color);
+      sprite.position.copy(labelDir.multiplyScalar(LABEL_DIST));
+      angleGroup.add(sprite);
+      pushAnimItem(sprite, dirs.length * 90 + 150 + i * 120, 400);
     });
   });
+  updateCaption();
 }
 
-function drawLonePairCloudsInto(group, dirs, startDelay) {
-  const LP_COLOR = 0x2c2c2c;
-  const lpMat = new THREE.MeshStandardMaterial({
-    color: LP_COLOR, transparent: true, opacity: 0.7,
-    roughness: 0.5, metalness: 0.05, side: THREE.DoubleSide, depthWrite: false,
-  });
-  const zAxis = new THREE.Vector3(0, 0, 1);
-  const lonePairLobeGeo = buildLobeGeometry(0.40, 1.05);
-  const centralPeriod = periodOf(currentMolecule.parsed.central.element);
-  const hybridLabel = getHybridLabel(currentMolecule.geometry.domains);
-  const lpText = `${centralPeriod}${hybridLabel}`;
-  dirs.forEach((dir, idx) => {
-    const v = new THREE.Vector3(dir[0], dir[1], dir[2]).normalize();
-    const lpMesh = new THREE.Mesh(lonePairLobeGeo, lpMat);
-    lpMesh.quaternion.setFromUnitVectors(zAxis, v);
-    lpMesh.position.copy(v.clone().multiplyScalar(0.35));
-    group.add(lpMesh);
-    pushAnimItem(lpMesh, startDelay + idx * 150, 400);
-    const perp = perpendicularTo(v);
-    const lpLabelPos = v.clone().multiplyScalar(0.72).add(perp.clone().multiplyScalar(0.24));
-    addLabelInCloud(group, lpText, LP_COLOR, lpLabelPos, startDelay + 100 + idx * 150);
-  });
-}
-
-function renderLonePairs(animate) {
-  clearGroup(lonePairGroup);
-  if (!lonePairVisible || !currentMolecule) return;
-  const { geometry } = currentMolecule;
-  if (geometry.lonePairDirections.length === 0) return;
-  suppressAnim = !animate;
-  if (viewMode === 'cloud') {
-    drawLonePairCloudsInto(lonePairGroup, geometry.lonePairDirections, 0);
-  } else {
-    drawLonePairsInto(lonePairGroup, geometry.lonePairDirections, 0);
-  }
-  suppressAnim = false;
-}
-
-/* ============================================================
-   清除分子（保留轨道和 viewMode）
-   ============================================================ */
-function clearMoleculeIfExists() {
-  if (!currentMolecule) return false;
-  stopResonance();
-  clearGroup(atomGroup);
-  clearGroup(angleGroup);
-  clearGroup(shapeGroup);
-  clearGroup(cloudGroup);
-  clearGroup(lonePairGroup);
-  animItems.length = 0;
-  currentMolecule = null;
-  geometryDisplay.textContent = '';
-  geometryDisplay.className = 'config-display empty';
-  geometryDisplay.style.color = '';
-  geometryDisplay.style.fontWeight = '';
-  capName.textContent = '';
-  btnResonance.disabled = true;
-  for (const obj of activeMeshes.values()) {
-    obj.visible = (viewMode !== 'angles');
-  }
-  return true;
-}
-
-/* ============================================================
-   1. 原子球
-   ============================================================ */
-function drawAtoms(parsed, geometry, doubleBondIdxSet) {
-  clearGroup(atomGroup);
-  const BOND_LEN = 1.8;
-  const { central, ligands, charge } = parsed;
-  const centralRadius = ATOM_RADII[central.element] || 0.4;
-  const centralColor = CPK_COLORS[central.element] || 0x888888;
-  const centerSphere = new THREE.Mesh(
-    new THREE.SphereGeometry(centralRadius, 32, 24),
-    new THREE.MeshStandardMaterial({ color: centralColor, roughness: 0.35, metalness: 0.1 })
-  );
-  atomGroup.add(centerSphere);
-  const ligandElements = [];
-  ligands.forEach(l => { for (let i = 0; i < l.count; i++) ligandElements.push(l.element); });
-  const ligInfo = computeLigandInfo(ligandElements, doubleBondIdxSet);
-  let totalLigandCharge = 0;
-  ligInfo.forEach(li => totalLigandCharge += li.charge);
-  const centralCharge = charge - totalLigandCharge;
-  geometry.directions.forEach((dir, i) => {
-    const el = ligandElements[i] || ligandElements[ligandElements.length - 1];
-    const radius = ATOM_RADII[el] || 0.35;
-    const color = CPK_COLORS[el] || 0x888888;
-    const v = new THREE.Vector3(dir[0], dir[1], dir[2]).normalize();
-    const sphere = new THREE.Mesh(
-      new THREE.SphereGeometry(radius, 24, 18),
-      new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.1 })
-    );
-    sphere.position.copy(v.clone().multiplyScalar(BOND_LEN));
-    atomGroup.add(sphere);
-    if (ligInfo[i] && ligInfo[i].charge !== 0) {
-      const chargeColor = ligInfo[i].charge > 0 ? 0xd94a4a : 0x3b6fd6;
-      const sprite = makeChargeLabel(ligInfo[i].charge, chargeColor);
-      sprite.position.copy(v.clone().multiplyScalar(BOND_LEN + radius + 0.24));
-      atomGroup.add(sprite);
-    }
-  });
-  if (centralCharge !== 0) {
-    const chargeColor = centralCharge > 0 ? 0xd94a4a : 0x3b6fd6;
-    const sprite = makeChargeLabel(centralCharge, chargeColor);
-    sprite.position.set(0, centralRadius + 0.36, 0);
-    atomGroup.add(sprite);
-  }
-}
-
-/* ============================================================
-   2. Angles 模式
-   ============================================================ */
-function drawAnglesOverlay(parsed, geometry, doubleBondIdxSet) {
-  clearGroup(angleGroup);
-  resetAnim();
-  const BOND_LEN = 1.8;
-  const BOND_COLOR = 0x555555;
-  const ligandElements = [];
-  parsed.ligands.forEach(l => { for (let i = 0; i < l.count; i++) ligandElements.push(l.element); });
-  const nLigands = geometry.directions.length;
-  const bondOrders = [];
-  for (let i = 0; i < nLigands; i++) bondOrders.push(doubleBondIdxSet.has(i) ? 2 : 1);
-  geometry.directions.forEach((dir, i) => {
-    const el = ligandElements[i] || ligandElements[ligandElements.length - 1];
-    const radius = ATOM_RADII[el] || 0.35;
-    const v = new THREE.Vector3(dir[0], dir[1], dir[2]).normalize();
-    const arrowLen = BOND_LEN - radius * 0.6;
-    const order = bondOrders[i] || 1;
-    const baseDelay = i * 90;
-    if (order === 1) {
-      const arrow = new THREE.ArrowHelper(v, new THREE.Vector3(0, 0, 0), arrowLen, BOND_COLOR, 0.22, 0.09);
-      angleGroup.add(arrow);
-      pushAnimItem(arrow, baseDelay, 380);
-    } else {
-      const perp = perpendicularTo(v);
-      const offset = 0.075;
-      const a1 = new THREE.ArrowHelper(v, perp.clone().multiplyScalar(offset), arrowLen, BOND_COLOR, 0.22, 0.09);
-      const a2 = new THREE.ArrowHelper(v, perp.clone().multiplyScalar(-offset), arrowLen, BOND_COLOR, 0.22, 0.09);
-      angleGroup.add(a1); angleGroup.add(a2);
-      pushAnimItem(a1, baseDelay, 380);
-      pushAnimItem(a2, baseDelay + 40, 380);
-    }
-  });
-  const labelStart = nLigands * 90 + 150;
-  geometry.pairs.forEach(({ i, j, angle }, k) => {
-    const da = geometry.directions[i], db = geometry.directions[j];
-    if (!da || !db) return;
-    const a = new THREE.Vector3(da[0], da[1], da[2]).normalize();
-    const b = new THREE.Vector3(db[0], db[1], db[2]).normalize();
-    const sum = a.clone().add(b);
-    let labelDir;
-    if (sum.lengthSq() < 0.01) {
-      const perp = new THREE.Vector3(0, 1, 0);
-      if (Math.abs(a.dot(perp)) > 0.9) perp.set(1, 0, 0);
-      labelDir = perp.clone().cross(a).normalize();
-    } else labelDir = sum.normalize();
-    const angleText = formatAngleText(angle, geometry.lonePairs, parsed.central.element, geometry.domains);
-    const sprite = makeAngleLabel(angleText, 0x555555);
-    sprite.position.copy(labelDir.multiplyScalar(BOND_LEN * 0.72));
-    angleGroup.add(sprite);
-    pushAnimItem(sprite, labelStart + k * 120, 400);
-  });
-}
-
-/* ============================================================
-   3. Shape 模式
-   ============================================================ */
-function drawShapeOverlay(parsed, geometry) {
-  clearGroup(shapeGroup);
-  resetAnim();
-  const BOND_LEN = 1.8;
-  const center = new THREE.Vector3(0, 0, 0);
-  const ligandDirs = geometry.directions.map(d => new THREE.Vector3(d[0], d[1], d[2]).normalize());
-  const ligandVerts = ligandDirs.map(v => v.clone().multiplyScalar(BOND_LEN));
-  const N = ligandVerts.length;
-
-  let centerInside = false;
-  if (N >= 3) centerInside = isPointInConvexHull(center, ligandVerts);
-
-  let collinear2 = false;
-  if (N === 2) {
-    const v1 = ligandVerts[0].clone().sub(center);
-    const v2 = ligandVerts[1].clone().sub(center);
-    const cr = new THREE.Vector3().crossVectors(v1, v2);
-    collinear2 = (cr.lengthSq() < 1e-6);
-  }
-
-  const fillMat = new THREE.MeshStandardMaterial({
-    color: 0xcccccc, transparent: true, opacity: 0.25,
-    roughness: 0.6, metalness: 0.0, side: THREE.DoubleSide, depthWrite: false,
-  });
-
-  if (N === 2 && !collinear2) {
-    const fillGeo = new THREE.BufferGeometry();
-    fillGeo.setAttribute('position', new THREE.Float32BufferAttribute([
-      center.x, center.y, center.z,
-      ligandVerts[0].x, ligandVerts[0].y, ligandVerts[0].z,
-      ligandVerts[1].x, ligandVerts[1].y, ligandVerts[1].z,
-    ], 3));
-    fillGeo.setIndex([0, 1, 2]);
-    fillGeo.computeVertexNormals();
-    const fillMesh = new THREE.Mesh(fillGeo, fillMat);
-    shapeGroup.add(fillMesh);
-    pushAnimItem(fillMesh, 0, 500);
-  } else if (N >= 3) {
-    let fillVerts;
-    if (centerInside) fillVerts = ligandVerts;
-    else fillVerts = [center, ...ligandVerts];
-    try {
-      const fillGeo = new ConvexGeometry(fillVerts);
-      const fillMesh = new THREE.Mesh(fillGeo, fillMat);
-      shapeGroup.add(fillMesh);
-      pushAnimItem(fillMesh, 0, 500);
-    } catch(e) {}
-  }
-
-  const edgeMat = new THREE.MeshStandardMaterial({
-    color: 0x666666, transparent: true, opacity: 0.75,
-    roughness: 0.4, metalness: 0.1,
-  });
-
-  let edges = [];
-  if (N === 0) {}
-  else if (N === 1) edges = [[center, ligandVerts[0]]];
-  else if (N === 2) {
-    edges = [
-      [center, ligandVerts[0]],
-      [center, ligandVerts[1]],
-      [ligandVerts[0], ligandVerts[1]],
-    ];
-  } else {
-    if (isCoplanar(ligandVerts)) {
-      const sorted = sortCoplanarVertices(ligandVerts);
-      for (let i = 0; i < sorted.length; i++) {
-        edges.push([sorted[i], sorted[(i + 1) % sorted.length]]);
-      }
-    } else {
-      edges = findPolyhedronEdges(ligandVerts);
-    }
-    if (!centerInside) {
-      ligandVerts.forEach(v => edges.push([center, v]));
-    }
-  }
-
-  edges.forEach(([a, b], k) => {
-    const dir = new THREE.Vector3().subVectors(b, a);
-    const len = dir.length();
-    if (len < 1e-6) return;
-    const cylGeo = new THREE.CylinderGeometry(0.022, 0.022, len, 8);
-    const mesh = new THREE.Mesh(cylGeo, edgeMat);
-    mesh.position.copy(a).add(dir.clone().multiplyScalar(0.5));
-    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
-    shapeGroup.add(mesh);
-    pushAnimItem(mesh, k * 40, 400);
-  });
-}
-
-/* ============================================================
-   4. Cloud 模式
-   ============================================================ */
-function drawCloudOverlay(parsed, geometry, doubleBondIdxSet) {
-  clearGroup(cloudGroup);
-  resetAnim();
-  const BOND_LEN = 1.8;
-  const SIGMA_COLOR = 0x3b82f6;
-  const PI_COLOR = 0xf59e0b;
-  const ligandElements = [];
-  parsed.ligands.forEach(l => { for (let i = 0; i < l.count; i++) ligandElements.push(l.element); });
-  const nLigands = geometry.directions.length;
-  const bondOrders = [];
-  for (let i = 0; i < nLigands; i++) bondOrders.push(doubleBondIdxSet.has(i) ? 2 : 1);
-  const sigmaMat = new THREE.MeshStandardMaterial({
-    color: SIGMA_COLOR, transparent: true, opacity: 0.68,
-    roughness: 0.4, metalness: 0.05, side: THREE.DoubleSide, depthWrite: false,
-  });
-  const piMat = new THREE.MeshStandardMaterial({
-    color: PI_COLOR, transparent: true, opacity: 0.75,
-    roughness: 0.4, metalness: 0.05, side: THREE.DoubleSide, depthWrite: false,
-  });
-  const zAxis = new THREE.Vector3(0, 0, 1);
-  const sigmaLobeGeo = buildLobeGeometry(0.30, 1.05);
-  const ligandLobeGeo = buildLobeGeometry(0.22, 0.72);
-  const centralPeriod = periodOf(parsed.central.element);
-  const hybridLabel = getHybridLabel(geometry.domains);
-  geometry.directions.forEach((dir, i) => {
-    const el = ligandElements[i] || ligandElements[ligandElements.length - 1];
-    const v = new THREE.Vector3(dir[0], dir[1], dir[2]).normalize();
-    const baseDelay = i * 120;
-    const sigmaMesh = new THREE.Mesh(sigmaLobeGeo, sigmaMat);
-    sigmaMesh.quaternion.setFromUnitVectors(zAxis, v);
-    cloudGroup.add(sigmaMesh);
-    pushAnimItem(sigmaMesh, baseDelay, 380);
-    const ligandLobe = new THREE.Mesh(ligandLobeGeo, sigmaMat);
-    ligandLobe.quaternion.setFromUnitVectors(zAxis, v.clone().negate());
-    ligandLobe.position.copy(v.clone().multiplyScalar(BOND_LEN));
-    cloudGroup.add(ligandLobe);
-    pushAnimItem(ligandLobe, baseDelay + 40, 380);
-    const perp1 = perpendicularTo(v);
-    const sigmaCenterText = `${centralPeriod}${hybridLabel}`;
-    const sigmaCenterLabelPos = v.clone().multiplyScalar(0.6).add(perp1.clone().multiplyScalar(0.26));
-    addLabelInCloud(cloudGroup, sigmaCenterText, SIGMA_COLOR, sigmaCenterLabelPos, baseDelay + 220);
-    const ligandPeriod = periodOf(el);
-    const sigmaLigandText = el === 'H' ? `${ligandPeriod}s` : `${ligandPeriod}p`;
-    const sigmaLigandLabelPos = v.clone().multiplyScalar(BOND_LEN - 0.42).add(perp1.clone().multiplyScalar(0.24));
-    addLabelInCloud(cloudGroup, sigmaLigandText, SIGMA_COLOR, sigmaLigandLabelPos, baseDelay + 320);
-    if (bondOrders[i] === 2) {
-      const perp = perpendicularTo(v);
-      const startPos = v.clone().multiplyScalar(0.35);
-      const endPos = v.clone().multiplyScalar(BOND_LEN - 0.35);
-      const piGeo1 = buildPiArc(startPos, endPos, perp, 0.55, 0.1);
-      const piMesh1 = new THREE.Mesh(piGeo1, piMat);
-      cloudGroup.add(piMesh1);
-      pushAnimItem(piMesh1, baseDelay + 100, 420);
-      const piGeo2 = buildPiArc(startPos, endPos, perp.clone().negate(), 0.55, 0.1);
-      const piMesh2 = new THREE.Mesh(piGeo2, piMat);
-      cloudGroup.add(piMesh2);
-      pushAnimItem(piMesh2, baseDelay + 140, 420);
-      const midPoint = startPos.clone().add(endPos).multiplyScalar(0.5);
-      const piLabelPos = midPoint.clone().add(perp.clone().multiplyScalar(0.62));
-      const piText = `${centralPeriod}p`;
-      addLabelInCloud(cloudGroup, piText, PI_COLOR, piLabelPos, baseDelay + 340);
-    }
-  });
-}
-
-/* ============================================================
-   5. 分子几何推理
-   ============================================================ */
-const VALENCE_ELECTRONS = {
-  H:1, He:2, Li:1, Be:2, B:3, C:4, N:5, O:6, F:7, Ne:8,
-  Na:1, Mg:2, Al:3, Si:4, P:5, S:6, Cl:7, Ar:8,
-  K:1, Ca:2, Ga:3, Ge:4, As:5, Se:6, Br:7, Kr:8,
-  Rb:1, Sr:2, In:3, Sn:4, Sb:5, Te:6, I:7, Xe:8,
-  Cs:1, Ba:2, Tl:3, Pb:4, Bi:5, Po:6, At:7, Rn:8,
-};
-
-const CPK_COLORS = {
-  H:0xf0f0f0, C:0x2e2e2e, N:0x3050f8, O:0xff2a2a, F:0x88e058,
-  Cl:0x22cc22, Br:0xa62929, I:0x9900cc, S:0xddcc22, P:0xff8000,
-  B:0xffb5b5, Si:0xf0c8a0, Xe:0x429eb0, Be:0xc2ff00,
-  Se:0xffa100, Te:0xd47a00, As:0xbd80e3, Al:0xbfa6a6,
-  Mg:0x8aff00, Li:0xcc80ff, Na:0xab5cf2, K:0x8f40d4,
-  Ca:0x3dff00, Rb:0x702eb0, Sr:0x00ff00, Cs:0x57178f,
-  Ba:0x00c900, Ge:0x668f8f, Sn:0x668080, Pb:0x575961,
-  Bi:0x9e4fb5, Sb:0x9e63b5, In:0xa67573, Tl:0xa6544d,
-  Ga:0xc28f8f, Po:0xab5c00, At:0x754f45, Rn:0x428296,
-  Ar:0x80d1e3, Kr:0x5cb8d1, Ne:0xb3e3f5, He:0xd9ffff,
-};
-
-const ATOM_RADII = {
-  H:0.22, He:0.20, Li:0.38, Be:0.36, B:0.38, C:0.40, N:0.38, O:0.36, F:0.34, Ne:0.32,
-  Na:0.44, Mg:0.42, Al:0.42, Si:0.44, P:0.44, S:0.44, Cl:0.42, Ar:0.40,
-  K:0.50, Ca:0.48, Ga:0.44, Ge:0.46, As:0.46, Se:0.46, Br:0.46, Kr:0.44,
-  Rb:0.54, Sr:0.52, In:0.50, Sn:0.50, Sb:0.50, Te:0.50, I:0.50, Xe:0.48,
-  Cs:0.58, Ba:0.56, Tl:0.52, Pb:0.52, Bi:0.52, Po:0.52, At:0.52, Rn:0.50,
-};
-
-function parseBinaryFormula(formula) {
-  let s = String(formula).replace(/\s+/g, '');
-  if (!s) return null;
-  let charge = 0;
-  const cm = s.match(/\^(\d*)([+\-])/);
-  if (cm) {
-    const mag = cm[1] ? parseInt(cm[1], 10) : 1;
-    charge = (cm[2] === '-') ? -mag : mag;
-    s = s.replace(/\^(\d*)([+\-])/, '');
-  }
-  const regex = /([A-Z][a-z]?)(\d*)/g;
-  const parts = [];
-  let m;
-  while ((m = regex.exec(s)) !== null) {
-    if (m[1]) parts.push({ element: m[1], count: m[2] ? parseInt(m[2], 10) : 1 });
-  }
-  if (parts.length === 0 || parts.length > 2) return null;
-  let centralIdx = 0;
-  const hIdx = parts.findIndex(p => p.element === 'H');
-  if (hIdx >= 0 && parts.length === 2) {
-    centralIdx = parts.findIndex(p => p.element !== 'H');
-    if (centralIdx < 0) centralIdx = 0;
-  }
-  const central = parts[centralIdx];
-  const ligands = parts.filter((_, i) => i !== centralIdx);
-  if (ligands.length === 0) return null;
-  const ligandCount = ligands.reduce((sum, p) => sum + p.count, 0);
-  return { central, ligands, ligandCount, charge };
-}
-
-const DOUBLE_BOND_CENTER = ['C', 'N', 'O', 'S', 'P', 'Cl', 'Br', 'I', 'Se', 'Te'];
-const PERIOD_2_CENTER = ['B', 'C', 'N', 'O', 'F'];
-
-function inferDoubleBondsAndLonePairs(centralSymbol, ligandElements, charge) {
-  const Vc = VALENCE_ELECTRONS[centralSymbol];
-  const L = ligandElements.length;
-  const result = { doubleBonds: 0, centerLonePairs: 0 };
-  let ligandValence = 0, ligandBaseLP = 0;
-  for (const e of ligandElements) {
-    ligandValence += VALENCE_ELECTRONS[e] || 0;
-    ligandBaseLP += (e === 'H') ? 0 : 3;
-  }
-  const E = Vc + ligandValence - charge;
-  const cRaw = (E - 2 * L - 2 * ligandBaseLP) / 2;
-  if (cRaw < 0 || !Number.isInteger(cRaw)) return result;
-  result.centerLonePairs = cRaw;
-  if (!DOUBLE_BOND_CENTER.includes(centralSymbol)) return result;
-  if (!ligandElements.every(e => e === 'O' || e === 'S' || e === 'Se')) return result;
-  let n = Vc - 2 * cRaw - L;
-  if (n < 0) n = 0;
-  if (n > L) n = L;
-  const maxPairs = PERIOD_2_CENTER.includes(centralSymbol) ? 4 : 6;
-  const maxN = maxPairs - L - cRaw;
-  if (n > maxN) n = maxN;
-  if (n < 0) n = 0;
-  result.doubleBonds = n;
-  return result;
-}
-
-function geometryNameFor(domains, lonePairs) {
-  const map = {
-    '2-0': 'Linear', '3-0': 'Trigonal Planar', '3-1': 'Bent (sp²)',
-    '4-0': 'Tetrahedral', '4-1': 'Trigonal Pyramidal', '4-2': 'Bent (sp³)',
-    '5-0': 'Trigonal Bipyramidal', '5-1': 'Seesaw', '5-2': 'T-shaped', '5-3': 'Linear',
-    '6-0': 'Octahedral', '6-1': 'Square Pyramidal', '6-2': 'Square Planar',
-  };
-  return map[`${domains}-${lonePairs}`] || null;
-}
-
-function geometryDirectionsFor(domains, lonePairs, centralSymbol) {
-  let allDirs, ligandIdx, anglePairs;
-  if (domains === 2) {
-    allDirs = [[0,1,0], [0,-1,0]]; ligandIdx = [0, 1]; anglePairs = [[0, 1, 180]];
-  } else if (domains === 3) {
-    allDirs = [[1,0,0], [-0.5,0,Math.sqrt(3)/2], [-0.5,0,-Math.sqrt(3)/2]];
-    if (lonePairs === 0) { ligandIdx = [0,1,2]; anglePairs = [[0,1,120]]; }
-    else { ligandIdx = [0,1]; anglePairs = [[0,1,120]]; }
-  } else if (domains === 4) {
-    const s = 1 / Math.sqrt(3);
-    allDirs = [[s,s,s],[s,-s,-s],[-s,s,-s],[-s,-s,s]];
-    if (lonePairs === 0) { ligandIdx = [0,1,2,3]; anglePairs = [[0,1,109.5]]; }
-    else if (lonePairs === 1) { ligandIdx = [0,1,2]; anglePairs = [[0,1,109.5]]; }
-    else { ligandIdx = [0,1]; const ba = (centralSymbol === 'O') ? 104.5 : 109.5; anglePairs = [[0,1,ba]]; }
-  } else if (domains === 5) {
-    allDirs = [[0,1,0],[0,-1,0],[1,0,0],[-0.5,0,Math.sqrt(3)/2],[-0.5,0,-Math.sqrt(3)/2]];
-    if (lonePairs === 0) { ligandIdx = [0,1,2,3,4]; anglePairs = [[0,2,90],[2,3,120],[0,1,180]]; }
-    else if (lonePairs === 1) { ligandIdx = [0,1,2,3]; anglePairs = [[0,2,90],[2,3,120],[0,1,180]]; }
-    else if (lonePairs === 2) { ligandIdx = [0,1,2]; anglePairs = [[0,2,90],[0,1,180]]; }
-    else { ligandIdx = [0,1]; anglePairs = [[0,1,180]]; }
-  } else if (domains === 6) {
-    allDirs = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
-    if (lonePairs === 0) { ligandIdx = [0,1,2,3,4,5]; anglePairs = [[0,2,90],[0,1,180]]; }
-    else if (lonePairs === 1) { ligandIdx = [0,1,2,3,5]; anglePairs = [[0,2,90],[0,5,90]]; }
-    else { ligandIdx = [0,1,2,3]; anglePairs = [[0,2,90],[0,1,180]]; }
-  } else return null;
-  const directions = ligandIdx.map(i => allDirs[i]);
-  const pairs = anglePairs.map(([i, j, angle]) => ({
-    i: ligandIdx.indexOf(i), j: ligandIdx.indexOf(j), angle,
-  })).filter(p => p.i >= 0 && p.j >= 0);
-  const lpIdx = [];
-  for (let i = 0; i < allDirs.length; i++) if (!ligandIdx.includes(i)) lpIdx.push(i);
-  const lonePairDirections = lpIdx.map(i => allDirs[i]);
-  return { directions, pairs, lonePairDirections };
-}
-
-function inferGeometry(centralSymbol, ligandCount, ligandElements, charge) {
-  if (ligandCount === 1) {
-    return { name: 'Linear (diatomic)', directions: [[0, 1, 0]], pairs: [], lonePairDirections: [], domains: 2, lonePairs: 0, doubleBonds: 0 };
-  }
-  const { doubleBonds, centerLonePairs } = inferDoubleBondsAndLonePairs(centralSymbol, ligandElements, charge);
-  const domains = ligandCount + centerLonePairs;
-  const name = geometryNameFor(domains, centerLonePairs);
-  if (!name) return null;
-  const dirData = geometryDirectionsFor(domains, centerLonePairs, centralSymbol);
-  if (!dirData) return null;
-  return {
-    name, directions: dirData.directions, pairs: dirData.pairs,
-    lonePairDirections: dirData.lonePairDirections,
-    domains, lonePairs: centerLonePairs, doubleBonds,
-  };
-}
-
-function generateResonanceStates(L, n) {
-  if (n === 0) return [[]];
-  const states = [];
-  const chosen = [];
-  function combine(start) {
-    if (chosen.length === n) { states.push([...chosen]); return; }
-    for (let i = start; i < L; i++) { chosen.push(i); combine(i + 1); chosen.pop(); }
-  }
-  combine(0);
-  return states;
-}
-
-function computeLigandInfo(ligandElements, doubleBondIdxSet) {
-  const info = [];
-  for (let i = 0; i < ligandElements.length; i++) {
-    const e = ligandElements[i];
-    const isDouble = doubleBondIdxSet.has(i);
-    const bondOrder = isDouble ? 2 : 1;
-    let lonePairs = 0;
-    const V = VALENCE_ELECTRONS[e] || 0;
-    if (e === 'H') lonePairs = 0;
-    else if (isDouble) lonePairs = 2;
-    else lonePairs = 3;
-    const charge = V - 2 * lonePairs - bondOrder;
-    info.push({ element: e, isDouble, bondOrder, lonePairs, charge });
-  }
-  return info;
-}
-
-function formatAngleText(angleValue, lonePairs, centralSymbol, domains) {
-  const isWater = (centralSymbol === 'O' && domains === 4 && lonePairs === 2);
-  if (isWater) return `${angleValue}°`;
-  if (lonePairs > 0) return `<${angleValue}°`;
-  return `${angleValue}°`;
-}
-
-let currentMolecule = null;
-let resonanceTimer = null;
-
-function stopResonance() {
-  if (resonanceTimer) { clearInterval(resonanceTimer); resonanceTimer = null; }
-  btnResonance.classList.remove('active');
-}
-
-function renderCurrentOverlay(animate) {
-  if (!currentMolecule) return;
-  const { parsed, geometry, resonanceStates, resonanceIndex } = currentMolecule;
-  const state = resonanceStates[resonanceIndex] || [];
-  const idxSet = new Set(state);
-  clearGroup(angleGroup);
-  clearGroup(shapeGroup);
-  clearGroup(cloudGroup);
-  animItems.length = 0;
-  suppressAnim = !animate;
-  if (animate) resetAnim();
-  if (viewMode === 'angles') {
-    drawAnglesOverlay(parsed, geometry, idxSet);
-  } else if (viewMode === 'shape') {
-    drawShapeOverlay(parsed, geometry);
-  } else if (viewMode === 'cloud') {
-    drawCloudOverlay(parsed, geometry, idxSet);
-  }
-  suppressAnim = false;
-  renderLonePairs(animate);
-}
-
-function handleMoleculeDraw() {
-  const formula = moleculeInputEl.value.trim();
-  stopResonance();
-  if (!formula) { geometryDisplay.textContent = ''; geometryDisplay.className = 'config-display empty'; return; }
-  const parsed = parseBinaryFormula(formula);
-  if (!parsed) {
-    geometryDisplay.textContent = `Cannot parse: "${formula}"`;
-    geometryDisplay.className = 'config-display error';
-    return;
-  }
-  const { central, ligandCount } = parsed;
-  if (!(central.element in VALENCE_ELECTRONS)) {
-    geometryDisplay.textContent = `Unknown element: "${central.element}"`;
-    geometryDisplay.className = 'config-display error';
-    return;
-  }
-  const ligandElements = [];
-  parsed.ligands.forEach(l => { for (let i = 0; i < l.count; i++) ligandElements.push(l.element); });
-  const geometry = inferGeometry(central.element, ligandCount, ligandElements, parsed.charge);
-  if (!geometry) {
-    geometryDisplay.textContent = 'Cannot infer geometry';
-    geometryDisplay.className = 'config-display error';
-    return;
-  }
-  const resonanceStates = generateResonanceStates(ligandCount, geometry.doubleBonds);
-  currentMolecule = { parsed, geometry, resonanceStates, resonanceIndex: 0 };
-  clearAllMeshes();
-  for (const obj of activeMeshes.values()) obj.visible = false;
-  clearGroup(angleGroup);
-  clearGroup(shapeGroup);
-  clearGroup(cloudGroup);
-  clearGroup(lonePairGroup);
-  animItems.length = 0;
-  drawAtoms(parsed, geometry, new Set(resonanceStates[0] || []));
-  renderViewRow();
-  renderCurrentOverlay(true);
-  const centerFormula = `${central.element}${central.count > 1 ? toSubscript(central.count) : ''}`;
-  const ligandFormula = parsed.ligands.map(l => `${l.element}${l.count > 1 ? toSubscript(l.count) : ''}`).join('');
-  let chargeLabel = '';
-  if (parsed.charge > 0) chargeLabel = toSuperscript(parsed.charge) + '+';
-  else if (parsed.charge < 0) chargeLabel = toSuperscript(-parsed.charge) + '−';
-  geometryDisplay.textContent = `${geometry.name}`;
-  geometryDisplay.className = 'config-display';
-  geometryDisplay.style.color = '#1a1a1a';
-  geometryDisplay.style.fontWeight = '600';
-  capName.textContent = `${centerFormula}${ligandFormula}${chargeLabel} · ${geometry.name}`;
-  btnResonance.disabled = resonanceStates.length <= 1;
-}
-
-/* ===== 轨道相关 ===== */
+/* ===== 6. Materials & registries ===== */
 const orbitalMaterial = new THREE.MeshStandardMaterial({
   vertexColors: true, roughness: 0.34, metalness: 0.16,
   side: THREE.DoubleSide, flatShading: false, transparent: false, opacity: 1.0,
@@ -1659,6 +856,8 @@ const cloudMaterial = new THREE.PointsMaterial({
 const activeMeshes = new Map();
 const removingMeshes = new Map();
 let viewMode = 'shape';
+let anglesAvailable = false;
+let viewLocked = false;
 
 function makeKey(n, l, m) { return `${n}|${l}|${m}`; }
 
@@ -1740,7 +939,7 @@ function rebuildAllOrbitals() {
   }
 }
 
-/* ===== Definitions ===== */
+/* ===== 7. Definitions ===== */
 const SHELL_ORDER = ['s', 'p', 'd', 'f', 'hybrid'];
 const SHELL_L = { s: 0, p: 1, d: 2, f: 3, hybrid: 4 };
 
@@ -1774,7 +973,7 @@ function labelFor(n, l, id) {
   return o ? `${n}${o.html.replace(/<[^>]+>/g, '')}` : `${n}?`;
 }
 
-/* ===== Element DB ===== */
+/* ===== 8. Element database ===== */
 const ELEMENTS = [
   'H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca',
   'Sc','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr','Rb','Sr','Y','Zr',
@@ -1854,7 +1053,9 @@ function adjustToElectronCount(baseConfig, targetCount) {
   return config;
 }
 
-function getConfiguration(Z, electronCount) { return adjustToElectronCount(baseConfigurationFor(Z), electronCount); }
+function getConfiguration(Z, electronCount) {
+  return adjustToElectronCount(baseConfigurationFor(Z), electronCount);
+}
 
 function isHundSpecial(l, count) {
   const orbitals = 2 * l + 1;
@@ -1863,7 +1064,8 @@ function isHundSpecial(l, count) {
 
 function formatConfiguration(config) {
   return config.map(({ n, l, count }) => {
-    const color = isHundSpecial(l, count) ? '#10b981' : '#ef4444';
+    const special = isHundSpecial(l, count);
+    const color = special ? '#10b981' : '#ef4444';
     return `<span style="color: ${color};">${n}${L_LETTERS[l]}${toSuperscript(count)}</span>`;
   }).join(' ');
 }
@@ -1871,8 +1073,8 @@ function formatConfiguration(config) {
 function findElementAtomicNumber(input) {
   const s = String(input).trim();
   if (!s) return null;
-  const normalized = s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
-  const idx = ELEMENTS.indexOf(normalized);
+  // 元素符号大小写敏感：Co 是钴，CO 不是元素符号
+  const idx = ELEMENTS.indexOf(s);
   return idx >= 0 ? idx + 1 : null;
 }
 
@@ -1884,7 +1086,1094 @@ function mValuesFor(l) {
   return [];
 }
 
-/* ===== UI ===== */
+/* ===== 9. Molecular Geometry ===== */
+const VALENCE_ELECTRONS = {
+  H:1, He:2, Li:1, Be:2, B:3, C:4, N:5, O:6, F:7, Ne:8,
+  Na:1, Mg:2, Al:3, Si:4, P:5, S:6, Cl:7, Ar:8,
+  K:1, Ca:2, Ga:3, Ge:4, As:5, Se:6, Br:7, Kr:8,
+  Rb:1, Sr:2, In:3, Sn:4, Sb:5, Te:6, I:7, Xe:8,
+  Cs:1, Ba:2, Tl:3, Pb:4, Bi:5, Po:6, At:7, Rn:8,
+};
+
+const CPK_COLORS = {
+  H:0xf0f0f0, C:0x2e2e2e, N:0x3050f8, O:0xff2a2a, F:0x88e058,
+  Cl:0x22cc22, Br:0xa62929, I:0x9900cc, S:0xddcc22, P:0xff8000,
+  B:0xffb5b5, Si:0xf0c8a0, Xe:0x429eb0, Be:0xc2ff00,
+  Se:0xffa100, Te:0xd47a00, As:0xbd80e3, Al:0xbfa6a6,
+  Mg:0x8aff00, Li:0xcc80ff, Na:0xab5cf2, K:0x8f40d4,
+  Ca:0x3dff00, Rb:0x702eb0, Sr:0x00ff00, Cs:0x57178f,
+  Ba:0x00c900, Ge:0x668f8f, Sn:0x668080, Pb:0x575961,
+  Bi:0x9e4fb5, Sb:0x9e63b5, In:0xa67573, Tl:0xa6544d,
+  Ga:0xc28f8f, Po:0xab5c00, At:0x754f45, Rn:0x428296,
+  Ar:0x80d1e3, Kr:0x5cb8d1, Ne:0xb3e3f5, He:0xd9ffff,
+};
+
+// 同一分子内不同元素必须颜色可区分：常用元素保持原色，其余元素冲突时旋转色相
+const FIXED_ELEMENT_COLORS = new Set(['H', 'C', 'N', 'O', 'F', 'Cl', 'Br', 'I', 'S', 'P', 'Si', 'B']);
+
+function colorDistance(a, b) {
+  const ar = (a >> 16) & 255, ag = (a >> 8) & 255, ab = a & 255;
+  const br = (b >> 16) & 255, bg = (b >> 8) & 255, bb = b & 255;
+  return Math.hypot(ar - br, ag - bg, ab - bb);
+}
+
+function colorHsl(hex) {
+  const c = new THREE.Color(hex);
+  const hsl = { h: 0, s: 0, l: 0 };
+  c.getHSL(hsl);
+  return hsl;
+}
+
+function isConfusableColor(a, b) {
+  if (colorDistance(a, b) < 100) return true;
+  const ha = colorHsl(a), hb = colorHsl(b);
+  let dh = Math.abs(ha.h - hb.h);
+  dh = Math.min(dh, 1 - dh);
+  return dh < 0.07 && Math.min(ha.s, hb.s) > 0.45 && Math.abs(ha.l - hb.l) < 0.3;
+}
+
+function rotateHue(hex, delta) {
+  const c = new THREE.Color(hex);
+  const hsl = colorHsl(hex);
+  c.setHSL((hsl.h + delta) % 1, hsl.s, hsl.l);
+  return c.getHex();
+}
+
+function assignMoleculeColors(elements) {
+  const unique = [...new Set(elements)];
+  unique.sort((a, b) =>
+    (FIXED_ELEMENT_COLORS.has(a) ? 0 : 1) - (FIXED_ELEMENT_COLORS.has(b) ? 0 : 1));
+  const result = new Map();
+  const used = [];
+  for (const el of unique) {
+    let color = CPK_COLORS[el] || 0x888888;
+    if (!FIXED_ELEMENT_COLORS.has(el)) {
+      let attempts = 0;
+      while (used.some(u => isConfusableColor(color, u)) && attempts < 12) {
+        color = rotateHue(color, 0.25);
+        attempts += 1;
+      }
+    }
+    result.set(el, color);
+    used.push(color);
+  }
+  return result;
+}
+
+// 右下角图例：原子构型显示波函数正负，分子显示元素配色
+function hideLegend() {
+  const el = document.querySelector('.legend');
+  if (el) el.classList.add('hidden');
+}
+
+function showWavefunctionLegend() {
+  const el = document.querySelector('.legend');
+  if (!el) return;
+  el.classList.remove('hidden');
+  const bonds = document.getElementById('bondLegend');
+  if (bonds) bonds.style.display = 'none';
+  const dyn = document.getElementById('legendDynamic');
+  if (dyn) dyn.innerHTML = '<div><span class="dot pos"></span>Positive ψ</div><div><span class="dot neg"></span>Negative ψ</div>';
+}
+
+function showElementLegend(colors, elements) {
+  const el = document.querySelector('.legend');
+  if (!el) return;
+  el.classList.remove('hidden');
+  const bonds = document.getElementById('bondLegend');
+  if (bonds) bonds.style.display = 'flex';
+  const dyn = document.getElementById('legendDynamic');
+  if (!dyn) return;
+  dyn.innerHTML = '';
+  for (const sym of elements) {
+    const row = document.createElement('div');
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    const hex = colors.get(sym) ?? 0x888888;
+    dot.style.background = '#' + hex.toString(16).padStart(6, '0');
+    row.appendChild(dot);
+    row.appendChild(document.createTextNode(sym));
+    dyn.appendChild(row);
+  }
+}
+
+const ATOM_RADII = {  H:0.22, He:0.20, Li:0.38, Be:0.36, B:0.38, C:0.40, N:0.38, O:0.36, F:0.34, Ne:0.32,
+  Na:0.44, Mg:0.42, Al:0.42, Si:0.44, P:0.44, S:0.44, Cl:0.42, Ar:0.40,
+  K:0.50, Ca:0.48, Ga:0.44, Ge:0.46, As:0.46, Se:0.46, Br:0.46, Kr:0.44,
+  Rb:0.54, Sr:0.52, In:0.50, Sn:0.50, Sb:0.50, Te:0.50, I:0.50, Xe:0.48,
+  Cs:0.58, Ba:0.56, Tl:0.52, Pb:0.52, Bi:0.52, Po:0.52, At:0.52, Rn:0.50,
+};
+
+/* ===== 9a. Ionic / covalent classification ===== */
+const ELECTRONEGATIVITY = {
+  H: 2.20, Li: 0.98, Be: 1.57, B: 2.04, C: 2.55, N: 3.04, O: 3.44, F: 3.98,
+  Na: 0.93, Mg: 1.31, Al: 1.61, Si: 1.90, P: 2.19, S: 2.58, Cl: 3.16,
+  K: 0.82, Ca: 1.00, Ga: 1.81, Ge: 2.01, As: 2.18, Se: 2.55, Br: 2.96,
+  Rb: 0.82, Sr: 0.95, In: 1.78, Sn: 1.96, Sb: 2.05, Te: 2.10, I: 2.66,
+  Cs: 0.79, Ba: 0.89, Tl: 1.62, Pb: 2.33, Bi: 2.02, Po: 2.00, At: 2.20,
+  He: 4.16, Ne: 4.79, Ar: 3.24, Kr: 3.00, Xe: 2.60, Rn: 2.20,
+};
+
+// 典型活泼金属：与任何非金属组合都按离子化合物处理
+const TYPICAL_METALS = new Set(['Li', 'Na', 'K', 'Rb', 'Cs', 'Mg', 'Ca', 'Sr', 'Ba']);
+
+// 电负性差 ≥ 1.7 视为离子键，否则为共价键
+function classifyCompound(parsed) {
+  const centralEl = parsed.central.element;
+  if (TYPICAL_METALS.has(centralEl)) return 'ionic';
+  const enCentral = ELECTRONEGATIVITY[centralEl];
+  let maxDiff = 0;
+  for (const lig of parsed.ligands) {
+    const enLig = ELECTRONEGATIVITY[lig.element];
+    if (enCentral !== undefined && enLig !== undefined) {
+      maxDiff = Math.max(maxDiff, Math.abs(enCentral - enLig));
+    }
+  }
+  return maxDiff >= 1.7 ? 'ionic' : 'covalent';
+}
+
+// 离子化合物里中心与配体各自带何种电荷（只取符号）
+function ionicSigns(parsed) {
+  const centralEl = parsed.central.element;
+  const ligandEl = parsed.ligands[0].element;
+  let centralIsCation;
+  if (TYPICAL_METALS.has(centralEl)) centralIsCation = true;
+  else if (TYPICAL_METALS.has(ligandEl)) centralIsCation = false;
+  else centralIsCation = (ELECTRONEGATIVITY[centralEl] ?? 0) < (ELECTRONEGATIVITY[ligandEl] ?? 0);
+  return centralIsCation ? { central: '+', ligand: '−' } : { central: '−', ligand: '+' };
+}
+
+function parseBinaryFormula(formula) {
+  let s = String(formula).replace(/\s+/g, '');
+  if (!s) return null;
+
+  let charge = 0;
+  const cm = s.match(/\^(\d*)([+\-])/);
+  if (cm) {
+    const mag = cm[1] ? parseInt(cm[1], 10) : 1;
+    charge = (cm[2] === '-') ? -mag : mag;
+    s = s.replace(/\^(\d*)([+\-])/, '');
+  }
+
+  const regex = /([A-Z][a-z]?)(\d*)/g;
+  const parts = [];
+  let m;
+  while ((m = regex.exec(s)) !== null) {
+    if (m[1]) parts.push({ element: m[1], count: m[2] ? parseInt(m[2], 10) : 1 });
+  }
+  if (parts.length === 0 || parts.length > 2) return null;
+
+  let centralIdx = 0;
+  const hIdx = parts.findIndex(p => p.element === 'H');
+  if (hIdx >= 0 && parts.length === 2) {
+    centralIdx = parts.findIndex(p => p.element !== 'H');
+    if (centralIdx < 0) centralIdx = 0;
+  }
+
+  const central = parts[centralIdx];
+  const ligands = parts.filter((_, i) => i !== centralIdx);
+  if (ligands.length === 0) return null;
+  const ligandCount = ligands.reduce((sum, p) => sum + p.count, 0);
+  return { central, ligands, ligandCount, charge };
+}
+
+/* ------------------------------------------------------------
+   修复：双键推理 —— 用总价电子 + 八隅体约束
+   ------------------------------------------------------------ */
+const DOUBLE_BOND_CENTER = ['C', 'N', 'O', 'S', 'P', 'Cl', 'Br', 'I', 'Se', 'Te'];
+const PERIOD_2_CENTER = ['B', 'C', 'N', 'O', 'F'];
+
+/**
+ * 计算双键数 n 与中心孤对数 c：
+ *  - 总价电子 E = Vc + ΣV(ligand) - charge
+ *  - 中心孤对 c 由电子平衡确定：c = (E - 2·L - 2·Σ(baseLP)) / 2
+ *    其中 baseLP = 每个 O 配体单键时提供 3 个孤对（双键时 2 个）
+ *  - 理想双键数 n_ideal = Vc - 2c - L（使中心形式电荷为 0）
+ *  - 八隅体约束：n ≤ maxPairs - L - c，其中 maxPairs 周期 2 为 4，否则 6
+ */
+function inferDoubleBondsAndLonePairs(centralSymbol, ligandElements, charge) {
+  const Vc = VALENCE_ELECTRONS[centralSymbol];
+  const L = ligandElements.length;
+  const result = { doubleBonds: 0, centerLonePairs: 0 };
+
+  // 计算总价电子与配体基础孤对
+  let ligandValence = 0;
+  let ligandBaseLP = 0;
+  for (const e of ligandElements) {
+    ligandValence += VALENCE_ELECTRONS[e] || 0;
+    ligandBaseLP += (e === 'H') ? 0 : 3;  // O / 卤素单键时 3 个孤对
+  }
+  const E = Vc + ligandValence - charge;
+
+  // 中心孤对
+  const cRaw = (E - 2 * L - 2 * ligandBaseLP) / 2;
+  if (cRaw < 0 || !Number.isInteger(cRaw)) return result;
+  result.centerLonePairs = cRaw;
+
+  // 只对能形成双键的中心与配体计算 n
+  if (!DOUBLE_BOND_CENTER.includes(centralSymbol)) return result;
+  if (!ligandElements.every(e => e === 'O' || e === 'S' || e === 'Se')) return result;
+
+  // 理想 n：中心形式电荷 = 0
+  let n = Vc - 2 * cRaw - L;
+  if (n < 0) n = 0;
+  if (n > L) n = L;
+
+  // 八隅体约束
+  const maxPairs = PERIOD_2_CENTER.includes(centralSymbol) ? 4 : 6;
+  const maxN = maxPairs - L - cRaw;
+  if (n > maxN) n = maxN;
+  if (n < 0) n = 0;
+
+  result.doubleBonds = n;
+  return result;
+}
+
+function geometryNameFor(domains, lonePairs) {
+  const map = {
+    '2-0': 'Linear',
+    '3-0': 'Trigonal Planar',
+    '3-1': 'Bent (sp²)',
+    '4-0': 'Tetrahedral',
+    '4-1': 'Trigonal Pyramidal',
+    '4-2': 'Bent (sp³)',
+    '5-0': 'Trigonal Bipyramidal',
+    '5-1': 'Seesaw',
+    '5-2': 'T-shaped',
+    '5-3': 'Linear',
+    '6-0': 'Octahedral',
+    '6-1': 'Square Pyramidal',
+    '6-2': 'Square Planar',
+  };
+  return map[`${domains}-${lonePairs}`] || null;
+}
+
+function geometryDirectionsFor(domains, lonePairs, centralSymbol) {
+  let allDirs, ligandIdx, anglePairs;
+
+  if (domains === 2) {
+    allDirs = [[0,1,0], [0,-1,0]]; ligandIdx = [0, 1]; anglePairs = [[0, 1, 180]];
+  } else if (domains === 3) {
+    allDirs = [[1,0,0], [-0.5,0,Math.sqrt(3)/2], [-0.5,0,-Math.sqrt(3)/2]];
+    if (lonePairs === 0) { ligandIdx = [0,1,2]; anglePairs = [[0,1,120]]; }
+    else { ligandIdx = [0,1]; anglePairs = [[0,1,120]]; }
+  } else if (domains === 4) {
+    const s = 1 / Math.sqrt(3);
+    allDirs = [[s,s,s],[s,-s,-s],[-s,s,-s],[-s,-s,s]];
+    if (lonePairs === 0) { ligandIdx = [0,1,2,3]; anglePairs = [[0,1,109.5]]; }
+    else if (lonePairs === 1) { ligandIdx = [0,1,2]; anglePairs = [[0,1,109.5]]; }
+    else { ligandIdx = [0,1]; const ba = (centralSymbol === 'O') ? 104.5 : 109.5; anglePairs = [[0,1,ba]]; }
+  } else if (domains === 5) {
+    allDirs = [[0,1,0],[0,-1,0],[1,0,0],[-0.5,0,Math.sqrt(3)/2],[-0.5,0,-Math.sqrt(3)/2]];
+    if (lonePairs === 0) { ligandIdx = [0,1,2,3,4]; anglePairs = [[0,2,90],[2,3,120],[0,1,180]]; }
+    else if (lonePairs === 1) { ligandIdx = [0,1,2,3]; anglePairs = [[0,2,90],[2,3,120],[0,1,180]]; }
+    else if (lonePairs === 2) { ligandIdx = [0,1,2]; anglePairs = [[0,2,90],[0,1,180]]; }
+    else { ligandIdx = [0,1]; anglePairs = [[0,1,180]]; }
+  } else if (domains === 6) {
+    allDirs = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+    if (lonePairs === 0) { ligandIdx = [0,1,2,3,4,5]; anglePairs = [[0,2,90],[0,1,180]]; }
+    else if (lonePairs === 1) { ligandIdx = [0,1,2,3,5]; anglePairs = [[0,2,90],[0,5,90]]; }
+    else { ligandIdx = [0,1,2,3]; anglePairs = [[0,2,90],[0,1,180]]; }
+  } else return null;
+
+  const directions = ligandIdx.map(i => allDirs[i]);
+  const pairs = anglePairs.map(([i, j, angle]) => ({
+    i: ligandIdx.indexOf(i), j: ligandIdx.indexOf(j), angle,
+  })).filter(p => p.i >= 0 && p.j >= 0);
+
+  const lpIdx = [];
+  for (let i = 0; i < allDirs.length; i++) {
+    if (!ligandIdx.includes(i)) lpIdx.push(i);
+  }
+  const lonePairDirections = lpIdx.map(i => allDirs[i]);
+
+  return { directions, pairs, lonePairDirections };
+}
+
+function inferGeometry(centralSymbol, ligandCount, ligandElements, charge) {
+  if (ligandCount === 1) {
+    return {
+      name: 'Linear (diatomic)',
+      directions: [[0, 1, 0]], pairs: [], lonePairDirections: [],
+      domains: 2, lonePairs: 0, doubleBonds: 0,
+    };
+  }
+
+  const { doubleBonds, centerLonePairs } = inferDoubleBondsAndLonePairs(
+    centralSymbol, ligandElements, charge
+  );
+
+  const domains = ligandCount + centerLonePairs;
+  const name = geometryNameFor(domains, centerLonePairs);
+  if (!name) return null;
+
+  const dirData = geometryDirectionsFor(domains, centerLonePairs, centralSymbol);
+  if (!dirData) return null;
+
+  return {
+    name,
+    directions: dirData.directions,
+    pairs: dirData.pairs,
+    lonePairDirections: dirData.lonePairDirections,
+    domains, lonePairs: centerLonePairs, doubleBonds,
+  };
+}
+
+/* ===== 9b. Species validation ===== */
+const PERIOD_2_ELEMENTS = new Set(['Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne']);
+const NOBLE_GASES = new Set(['He', 'Ne', 'Ar', 'Kr', 'Xe', 'Rn']);
+const BONDING_NOBLE_GASES = new Set(['Kr', 'Xe', 'Rn']);
+
+/**
+ * 判定该模型无法成立的物种（仅用于提示，结构仍会照常绘制）：
+ *  - 惰性气体（He / Ne / Ar）不能作中心原子
+ *  - 配位数超出中心原子的成键容量（第二周期 4 对，其余 7 对）
+ *  - 电荷绝对值大于配体数（每个配体至多带一个负电荷）
+ *  - 价电子无法全部配对，或中心原子轨道数不够容纳孤对
+ * 双原子物种只做容量检查，避免误伤 NO 这类自由基分子。
+ */
+function validateSpecies(parsed) {
+  const central = parsed.central.element;
+  const ligandElements = [];
+  parsed.ligands.forEach(l => { for (let i = 0; i < l.count; i++) ligandElements.push(l.element); });
+  const L = ligandElements.length;
+
+  if (NOBLE_GASES.has(central) && !BONDING_NOBLE_GASES.has(central)) {
+    return { ok: false, reason: 'inert-gas' };
+  }
+
+  const maxPairs = PERIOD_2_ELEMENTS.has(central) ? 4 : 7;
+  if (L > maxPairs) return { ok: false, reason: 'coordination' };
+  if (Math.abs(parsed.charge) > L) return { ok: false, reason: 'charge' };
+  if (L === 1) return { ok: true };
+
+  const Vc = VALENCE_ELECTRONS[central];
+
+  // 氢配体数量不能超过中心原子的成键容量（PH5、SH6、ClH3 不成立）
+  if (ligandElements.every(el => el === 'H') &&
+      L > 8 - Vc + Math.max(0, parsed.charge)) {
+    return { ok: false, reason: 'hydride-capacity' };
+  }
+  let ligandValence = 0;
+  let ligandBaseLP = 0;
+  for (const el of ligandElements) {
+    ligandValence += VALENCE_ELECTRONS[el] || 0;
+    ligandBaseLP += (el === 'H') ? 0 : 3;
+  }
+  const electrons = Vc + ligandValence - parsed.charge;
+  const lonePairs = (electrons - 2 * L - 2 * ligandBaseLP) / 2;
+
+  if (!Number.isInteger(lonePairs) || lonePairs < 0) {
+    return { ok: false, reason: 'electron-count' };
+  }
+  if (L + lonePairs > maxPairs) {
+    return { ok: false, reason: 'orbital-overflow' };
+  }
+
+  // 第二周期中心的正式电荷应在 -1 ~ +1（H2O^2+、NH3^2+ 不成立）
+  if (PERIOD_2_ELEMENTS.has(central)) {
+    const { doubleBonds } = inferDoubleBondsAndLonePairs(central, ligandElements, parsed.charge);
+    const formalCharge = Vc - 2 * lonePairs - (L + doubleBonds);
+    if (formalCharge < -1 || formalCharge > 1) {
+      return { ok: false, reason: 'formal-charge' };
+    }
+  }
+  return { ok: true };
+}
+
+function perpendicularTo(v) {
+  const up = new THREE.Vector3(0, 1, 0);
+  if (Math.abs(v.dot(up)) > 0.9) up.set(1, 0, 0);
+  return up.clone().cross(v).normalize();
+}
+
+function generateResonanceStates(L, n) {
+  if (n === 0) return [[]];
+  const states = [];
+  const chosen = [];
+  function combine(start) {
+    if (chosen.length === n) { states.push([...chosen]); return; }
+    for (let i = start; i < L; i++) {
+      chosen.push(i);
+      combine(i + 1);
+      chosen.pop();
+    }
+  }
+  combine(0);
+  return states;
+}
+
+function drawLonePairs(dirs, startDelay) {
+  const LP_COLOR = 0x1f1f1f, LP_RADIUS = 0.085, LP_DIST = 1.15, LP_SPLIT = 0.14;
+  dirs.forEach((dir, idx) => {
+    const v = new THREE.Vector3(dir[0], dir[1], dir[2]).normalize();
+    const perp = perpendicularTo(v);
+    const centerPos = v.clone().multiplyScalar(LP_DIST);
+    const pos1 = centerPos.clone().add(perp.clone().multiplyScalar(LP_SPLIT));
+    const pos2 = centerPos.clone().sub(perp.clone().multiplyScalar(LP_SPLIT));
+    const baseDelay = startDelay + idx * 150;
+    [pos1, pos2].forEach((pos, k) => {
+      const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(LP_RADIUS, 16, 12),
+        new THREE.MeshStandardMaterial({ color: LP_COLOR, roughness: 0.55, metalness: 0.05 })
+      );
+      sphere.position.copy(pos);
+      lonePairGroup.add(sphere);
+      pushAnimItem(sphere, baseDelay + k * 60, 320);
+    });
+  });
+}
+
+function computeLigandInfo(ligandElements, doubleBondIdxSet) {
+  const info = [];
+  for (let i = 0; i < ligandElements.length; i++) {
+    const e = ligandElements[i];
+    const isDouble = doubleBondIdxSet.has(i);
+    const bondOrder = isDouble ? 2 : 1;
+    let lonePairs = 0;
+    const V = VALENCE_ELECTRONS[e] || 0;
+    if (e === 'H') lonePairs = 0;
+    else if (isDouble) lonePairs = 2;
+    else lonePairs = 3;
+    const charge = V - 2 * lonePairs - bondOrder;
+    info.push({ element: e, isDouble, bondOrder, lonePairs, charge });
+  }
+  return info;
+}
+
+// 共振“幽灵键”：虚线 + 半透明的双键轮廓，标示该键可能移动到的位置
+function makeGhostDoubleBond(v, length, perp, offset, withHead = true) {
+  const group = new THREE.Group();
+  const material = new THREE.MeshBasicMaterial({
+    color: 0x7a7a7a, transparent: true, opacity: 0.42, depthWrite: false,
+  });
+  const DASH = 0.13, GAP = 0.08, HEAD = 0.2;
+  const shaft = Math.max(0.12, length - HEAD);
+  const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), v);
+
+  [offset, -offset].forEach(off => {
+    const base = perp.clone().multiplyScalar(off);
+    for (let t = 0; t < shaft; t += DASH + GAP) {
+      const len = Math.min(DASH, shaft - t);
+      const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, len, 6), material);
+      seg.quaternion.copy(quat);
+      seg.position.copy(base).addScaledVector(v, t + len / 2);
+      group.add(seg);
+    }
+    if (withHead) {
+      const head = new THREE.Mesh(new THREE.ConeGeometry(0.1, HEAD, 10), material);
+      head.quaternion.copy(quat);
+      head.position.copy(base).addScaledVector(v, length - HEAD / 2);
+      group.add(head);
+    }
+  });
+  return group;
+}
+
+// sigma / pi 键的形状：沿键轴的椭球（头碰头）与上下两条椭球（肩并肩）
+function makeBondLobe(dir, center, length, radius, color, opacity) {
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1, 20, 14),
+    new THREE.MeshStandardMaterial({
+      color, roughness: 0.45, metalness: 0.08,
+      transparent: opacity < 1, opacity,
+    })
+  );
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+  mesh.scale.set(radius, length / 2, radius);
+  mesh.position.copy(center);
+  return mesh;
+}
+
+function makeSigmaBond(v, dist, centralRadius, ligandRadius) {
+  const t1 = centralRadius * 0.8;
+  const t2 = dist - ligandRadius * 0.8;
+  const length = Math.max(0.45, (t2 - t1) + 0.2);
+  const mid = (t1 + t2) / 2;
+  return makeBondLobe(v, v.clone().multiplyScalar(mid), length, 0.13, 0x4f4f4f, 1);
+}
+
+function piArcCurve(v, perp, dist, centralRadius, ligandRadius, side) {
+  const t1 = centralRadius * 0.85;
+  const t2 = dist - ligandRadius * 0.85;
+  const start = v.clone().multiplyScalar(t1).addScaledVector(perp, side * 0.05);
+  const end = v.clone().multiplyScalar(t2).addScaledVector(perp, side * 0.05);
+  const mid = v.clone().multiplyScalar((t1 + t2) / 2).addScaledVector(perp, side * 0.72);
+  return new THREE.QuadraticBezierCurve3(start, mid, end);
+}
+
+// pi 键：一上一下两条弧形电子云（肩并肩重叠）
+function makePiArcs(v, perp, dist, centralRadius, ligandRadius, axis2) {
+  const group = new THREE.Group();
+  const material = new THREE.MeshStandardMaterial({
+    color: 0x6c6c6c, roughness: 0.5, metalness: 0.05,
+    transparent: true, opacity: 0.82, depthWrite: false,
+  });
+  material.userData.baseOpacity = 0.82;
+  [1, -1].forEach(side => {
+    const curve = piArcCurve(v, perp, dist, centralRadius, ligandRadius, side);
+    group.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 36, 0.075, 8, false), material));
+  });
+  if (axis2) {
+    [1, -1].forEach(side => {
+      const curve = piArcCurve(v, axis2, dist, centralRadius, ligandRadius, side);
+      group.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 36, 0.075, 8, false), material));
+    });
+  }
+  return group;
+}
+
+// 共振候选位的虚线弧形 pi 电子云（用短管拼成虚线，线宽更清楚）
+function makeGhostPiArcs(v, perp, dist, centralRadius, ligandRadius) {
+  const group = new THREE.Group();
+  const material = new THREE.MeshBasicMaterial({
+    color: 0x9a9a9a, transparent: true, opacity: 0.5, depthWrite: false,
+  });
+  material.userData.baseOpacity = 0.5;
+  [1, -1].forEach(side => {
+    const curve = piArcCurve(v, perp, dist, centralRadius, ligandRadius, side);
+    const points = curve.getPoints(16);
+    for (let k = 0; k < points.length - 1; k += 2) {
+      const seg = new THREE.LineCurve3(points[k], points[k + 1]);
+      group.add(new THREE.Mesh(new THREE.TubeGeometry(seg, 1, 0.045, 6, false), material));
+    }
+  });
+  return group;
+}
+
+function drawMolecule(parsed, geometry, doubleBondIdxSet) {
+  const { central, ligands, charge } = parsed;
+  const BOND_LEN = 1.8;
+  const centralRadius = ATOM_RADII[central.element] || 0.4;
+  const ligandElements = [];
+  ligands.forEach(l => { for (let i = 0; i < l.count; i++) ligandElements.push(l.element); });
+  const elementColors = assignMoleculeColors([central.element, ...ligandElements]);
+  const centralColor = elementColors.get(central.element) || 0x888888;
+  showElementLegend(elementColors, [...new Set([central.element, ...ligandElements])]);
+
+  const centralSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(centralRadius, 32, 24),
+    new THREE.MeshStandardMaterial({ color: centralColor, roughness: 0.35, metalness: 0.1 })
+  );
+  angleGroup.add(centralSphere);
+  pushAnimItem(centralSphere, 0, 320);
+
+  const nLigands = geometry.directions.length;
+  const bondOrders = [];
+  for (let i = 0; i < nLigands; i++) bondOrders.push(doubleBondIdxSet.has(i) ? 2 : 1);
+
+  const ligInfo = computeLigandInfo(ligandElements, doubleBondIdxSet);
+  let totalLigandCharge = 0;
+  ligInfo.forEach(li => totalLigandCharge += li.charge);
+  const centralCharge = charge - totalLigandCharge;
+  const special = parsed.special;
+
+  // 其它共振态里可能形成双键的位置：用虚线幽灵轮廓标出
+  // 仅在 Resonance 模式下才显示“可能移动到的位置”的虚线幽灵轮廓
+  const ghostBondIdx = new Set();
+  if (resonanceMode && currentMolecule && currentMolecule.resonanceStates.length > 1) {
+    currentMolecule.resonanceStates.forEach(state => {
+      state.forEach(idx => { if (!doubleBondIdxSet.has(idx)) ghostBondIdx.add(idx); });
+    });
+  }
+
+  const bondType = (currentMolecule && currentMolecule.bondType) || 'covalent';
+  const isIonic = bondType === 'ionic';
+  const ionSigns = isIonic ? ionicSigns(parsed) : null;
+  const signColor = sign => (sign === '+' ? 0xd94a4a : 0x3b6fd6);
+
+  geometry.directions.forEach((dir, i) => {
+    const el = ligandElements[i] || ligandElements[ligandElements.length - 1];
+    const radius = ATOM_RADII[el] || 0.35;
+    const color = elementColors.get(el) || 0x888888;
+    const v = new THREE.Vector3(dir[0], dir[1], dir[2]).normalize();
+    const order = (parsed.specialBondOrders && parsed.specialBondOrders[i]) || bondOrders[i] || 1;
+    const baseDelay = 150 + i * 90;
+
+    if (isIonic) {
+      // 离子化合物：不画共价键，在正负离子相对的表面各标一个电荷符号
+      const centralSign = makeChargeLabel(ionSigns.central, signColor(ionSigns.central), 0.52);
+      centralSign.position.copy(v.clone().multiplyScalar(centralRadius + 0.3));
+      angleGroup.add(centralSign);
+      pushAnimItem(centralSign, baseDelay + 40, 320);
+
+      const ligandSign = makeChargeLabel(ionSigns.ligand, signColor(ionSigns.ligand), 0.52);
+      ligandSign.position.copy(v.clone().multiplyScalar(BOND_LEN - radius - 0.3));
+      angleGroup.add(ligandSign);
+      pushAnimItem(ligandSign, baseDelay + 80, 320);
+    } else {
+      const sigma = makeSigmaBond(v, BOND_LEN, centralRadius, radius);
+      angleGroup.add(sigma);
+      pushAnimItem(sigma, baseDelay, 380);
+
+      if (ghostBondIdx.has(i)) {
+        const perp = perpendicularTo(v);
+        const ghost = makeGhostPiArcs(v, perp, BOND_LEN, centralRadius, radius);
+        ghost.userData.piMesh = true;
+        ghost.userData.piKind = 'ghost';
+        ghost.userData.bondIndex = i;
+        angleGroup.add(ghost);
+        pushAnimItem(ghost, baseDelay + 40, 380);
+      } else if (order >= 2) {
+        const perp = perpendicularTo(v);
+        const axis2 = order >= 3 ? new THREE.Vector3().crossVectors(v, perp).normalize() : null;
+        const arcs = makePiArcs(v, perp, BOND_LEN, centralRadius, radius, axis2);
+        arcs.userData.piMesh = true;
+        arcs.userData.piKind = 'solid';
+        arcs.userData.bondIndex = i;
+        angleGroup.add(arcs);
+        pushAnimItem(arcs, baseDelay + 60, 380);
+      }
+    }
+
+    const ligandSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(radius, 24, 18),
+      new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.1 })
+    );
+    ligandSphere.position.copy(v.clone().multiplyScalar(BOND_LEN));
+    angleGroup.add(ligandSphere);
+    pushAnimItem(ligandSphere, baseDelay + 120, 380);
+
+    if (!isIonic && !special && ligInfo[i] && ligInfo[i].charge !== 0) {
+      const sign = ligInfo[i].charge > 0 ? '+' : '−';
+      const chargeColor = ligInfo[i].charge > 0 ? 0xd94a4a : 0x3b6fd6;
+      const sprite = makeChargeLabel(sign, chargeColor);
+      sprite.position.copy(v.clone().multiplyScalar(BOND_LEN + radius + 0.22));
+      angleGroup.add(sprite);
+      pushAnimItem(sprite, baseDelay + 280, 320);
+    }
+  });
+
+  if (special === 'cyanide') {
+    // C≡N：碳端用孤对电子 + 负电荷表示“少接的那根键”
+    const v = new THREE.Vector3(
+      geometry.directions[0][0], geometry.directions[0][1], geometry.directions[0][2]
+    ).normalize();
+    const perp = perpendicularTo(v);
+    const back = v.clone().multiplyScalar(-(centralRadius + 0.24));
+    const dotMat = new THREE.MeshStandardMaterial({ color: 0x1f1f1f, roughness: 0.6, metalness: 0.05 });
+    [-1, 1].forEach(side => {
+      const dot = new THREE.Mesh(new THREE.SphereGeometry(0.045, 12, 10), dotMat);
+      dot.position.copy(back).addScaledVector(perp, side * 0.09);
+      angleGroup.add(dot);
+      pushAnimItem(dot, 520, 320);
+    });
+    const minus = makeChargeLabel('−', 0x3b6fd6, 0.44);
+    minus.position.copy(v.clone().multiplyScalar(-(centralRadius + 0.62)));
+    angleGroup.add(minus);
+    pushAnimItem(minus, 560, 320);
+  }
+
+  if (special === 'co' || special === 'hcn') {
+    const dir0 = geometry.directions[0];
+    const v0 = new THREE.Vector3(dir0[0], dir0[1], dir0[2]).normalize();
+    const dotMat = new THREE.MeshStandardMaterial({ color: 0x1f1f1f, roughness: 0.6, metalness: 0.05 });
+    const addDots = (base, perp, delay) => {
+      [-1, 1].forEach(side => {
+        const dot = new THREE.Mesh(new THREE.SphereGeometry(0.045, 12, 10), dotMat);
+        dot.position.copy(base).addScaledVector(perp, side * 0.09);
+        angleGroup.add(dot);
+        pushAnimItem(dot, delay, 320);
+      });
+    };
+
+    if (special === 'co') {
+      const perp = perpendicularTo(v0);
+      addDots(v0.clone().multiplyScalar(-(centralRadius + 0.24)), perp, 520);
+      const minus = makeChargeLabel('−', 0x3b6fd6, 0.44);
+      minus.position.copy(v0.clone().multiplyScalar(-(centralRadius + 0.62)));
+      angleGroup.add(minus);
+      pushAnimItem(minus, 560, 320);
+
+      const oRadius = ATOM_RADII.O || 0.36;
+      addDots(v0.clone().multiplyScalar(BOND_LEN + oRadius + 0.24), perp, 560);
+      const plus = makeChargeLabel('+', 0xd94a4a, 0.44);
+      plus.position.copy(v0.clone().multiplyScalar(BOND_LEN + oRadius + 0.62));
+      angleGroup.add(plus);
+      pushAnimItem(plus, 600, 320);
+    } else {
+      const dir1 = geometry.directions[1];
+      const v1 = new THREE.Vector3(dir1[0], dir1[1], dir1[2]).normalize();
+      const nRadius = ATOM_RADII.N || 0.38;
+      addDots(v1.clone().multiplyScalar(BOND_LEN + nRadius + 0.24), perpendicularTo(v1), 560);
+    }
+  }
+
+  if (parsed.radical === 'no2') {
+    // NO₂：氮上只有一个未成对电子（单点），不是孤对
+    const v = new THREE.Vector3(0, 0, -1);
+    const dot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.06, 12, 10),
+      new THREE.MeshBasicMaterial({ color: 0x1f1f1f, depthTest: false, depthWrite: false })
+    );
+    dot.renderOrder = 999;
+    dot.position.copy(v.clone().multiplyScalar(0.8));
+    angleGroup.add(dot);
+    pushAnimItem(dot, 520, 320);
+  }
+
+  if (!isIonic && !special && centralCharge !== 0) {
+    const sign = centralCharge > 0 ? '+' : '−';
+    const chargeColor = centralCharge > 0 ? 0xd94a4a : 0x3b6fd6;
+    const sprite = makeChargeLabel(sign, chargeColor);
+    sprite.position.set(0, centralRadius + 0.32, 0);
+    angleGroup.add(sprite);
+    pushAnimItem(sprite, 400, 320);
+  }
+
+  if (!isIonic) {
+    const labelStartDelay = 150 + nLigands * 90 + 200;
+    geometry.pairs.forEach(({ i, j, angle }, k) => {
+      const da = geometry.directions[i], db = geometry.directions[j];
+      if (!da || !db) return;
+      const a = new THREE.Vector3(da[0], da[1], da[2]).normalize();
+      const b = new THREE.Vector3(db[0], db[1], db[2]).normalize();
+      const sum = a.clone().add(b);
+      let labelDir;
+      if (sum.lengthSq() < 0.01) {
+        const perp = new THREE.Vector3(0, 1, 0);
+        if (Math.abs(a.dot(perp)) > 0.9) perp.set(1, 0, 0);
+        labelDir = perp.clone().cross(a).normalize();
+      } else labelDir = sum.normalize();
+      const sprite = makeAngleLabel(`${angle}°`, 0x555555);
+      sprite.position.copy(labelDir.multiplyScalar(BOND_LEN * 0.72));
+      angleGroup.add(sprite);
+      pushAnimItem(sprite, labelStartDelay + k * 120, 400);
+    });
+
+    if (lonePairVisible && geometry.lonePairDirections.length > 0) {
+      const lpDelay = labelStartDelay + geometry.pairs.length * 120 + 150;
+      drawLonePairs(geometry.lonePairDirections, lpDelay);
+    }
+  }
+  lonePairGroup.visible = lonePairVisible && !isIonic;
+}
+
+/* ===== 9c. Invalid-species feedback ===== */
+const dangerVignette = document.getElementById('dangerVignette');
+const dangerToast = document.getElementById('dangerToast');
+const dangerToastSub = document.getElementById('dangerToastSub');
+
+function showSubstanceError(formula) {
+  dangerToastSub.textContent = formula ? `“${formula}”` : '';
+
+  dangerVignette.classList.remove('show');
+  dangerToast.classList.remove('show');
+  void dangerVignette.offsetWidth; // 重新触发红光动画
+  dangerVignette.classList.add('show');
+  dangerToast.classList.add('show');
+}
+
+function hideSubstanceError() {
+  dangerVignette.classList.remove('show');
+  dangerToast.classList.remove('show');
+}
+
+function showGeometryError(message) {
+  geometryDisplay.textContent = message;
+  geometryDisplay.className = 'config-display error';
+  geometryDisplay.style.color = '';
+  geometryDisplay.style.fontWeight = '';
+}
+
+let currentMolecule = null;
+let resonanceTimer = null;
+let resonanceMode = false;
+
+function stopResonance() {
+  if (resonanceTimer) { clearInterval(resonanceTimer); resonanceTimer = null; }
+  resonanceMode = false;
+  btnResonance.classList.remove('active');
+}
+
+let renderedState = new Set();
+const transitionObjects = [];
+let transitionTimer = 0;
+
+function detachForFade(obj) {
+  angleGroup.remove(obj);
+  scene.add(obj);
+  transitionObjects.push(obj);
+  const mats = new Set();
+  obj.traverse(c => { if (c.material) mats.add(c.material); });
+  mats.forEach(m => fadeMaterial(m, 0, 220));
+}
+
+function disposeTransitionObjects() {
+  for (const obj of transitionObjects) {
+    scene.remove(obj);
+    disposeRecursively(obj);
+  }
+  transitionObjects.length = 0;
+}
+
+function fadeInChanged(index, kind) {
+  for (const obj of angleGroup.children) {
+    if (!obj.userData.piMesh) continue;
+    if (obj.userData.bondIndex !== index || obj.userData.piKind !== kind) continue;
+    const mats = new Set();
+    obj.traverse(c => { if (c.material) mats.add(c.material); });
+    mats.forEach(m => {
+      const target = m.userData.baseOpacity ?? m.opacity;
+      m.userData.baseOpacity = target;
+      m.opacity = 0;
+      fadeMaterial(m, target, 320);
+    });
+  }
+}
+
+function drawMoleculeState(animate) {
+  if (!currentMolecule) return;
+  clearAngleOverlay();
+  if (animate) { resetAngleAnim(); suppressAnim = false; }
+  else { suppressAnim = true; angleAnimItems.length = 0; }
+  const state = currentMolecule.resonanceStates[currentMolecule.resonanceIndex] || [];
+  drawMolecule(currentMolecule.parsed, currentMolecule.geometry, new Set(state));
+  suppressAnim = false;
+  renderedState = new Set(state);
+}
+
+function transitionResonance() {
+  if (!currentMolecule) return;
+  const nextState = new Set(currentMolecule.resonanceStates[currentMolecule.resonanceIndex] || []);
+  const removed = [...renderedState].filter(i => !nextState.has(i));
+  const added = [...nextState].filter(i => !renderedState.has(i));
+
+  // 只保留“正在消失”的实线 π 与“即将被替代”的虚线 π，其余位置保持不动
+  const keep = [...angleGroup.children].filter(obj => {
+    if (!obj.userData.piMesh) return false;
+    const i = obj.userData.bondIndex;
+    if (obj.userData.piKind === 'solid') return removed.includes(i);
+    if (obj.userData.piKind === 'ghost') return added.includes(i);
+    return false;
+  });
+  keep.forEach(detachForFade);
+
+  drawMoleculeState(false);
+
+  removed.forEach(i => fadeInChanged(i, 'ghost'));
+  added.forEach(i => fadeInChanged(i, 'solid'));
+
+  if (keep.length) {
+    clearTimeout(transitionTimer);
+    transitionTimer = setTimeout(disposeTransitionObjects, 320);
+  }
+}
+
+function redrawCurrentMolecule(animate = true) {
+  if (!currentMolecule) return;
+  if (!animate && resonanceMode) { transitionResonance(); return; }
+  drawMoleculeState(animate);
+}
+
+/* 常见多中心共振分子：通用 ABx 解析覆盖不到，单独构造几何 */
+function bentGeometry(angle, doubleBonds, name) {
+  const half = (angle / 2) * Math.PI / 180;
+  return {
+    name,
+    directions: [[Math.sin(half), 0, Math.cos(half)], [-Math.sin(half), 0, Math.cos(half)]],
+    pairs: [{ i: 0, j: 1, angle }],
+    lonePairDirections: [[0, 0, -1]],
+    domains: 3,
+    lonePairs: 1,
+    doubleBonds,
+  };
+}
+
+function buildSpecialSpecies(formula) {
+  if (formula === 'O3') {
+    return {
+      label: 'O₃',
+      parsed: {
+        central: { element: 'O', count: 1 },
+        ligands: [{ element: 'O', count: 2 }],
+        ligandCount: 2,
+        charge: 0,
+      },
+      geometry: bentGeometry(117, 1, 'Bent (sp²)'),
+      resonanceStates: [[0], [1]],
+    };
+  }
+  if (formula === 'NO2') {
+    const geometry = bentGeometry(134, 1, 'Bent (sp²)');
+    geometry.lonePairs = 0;            // NO₂ 的第三个方向是一个未成对电子，不是孤对
+    geometry.lonePairDirections = [];
+    return {
+      label: 'NO₂',
+      parsed: {
+        central: { element: 'N', count: 1 },
+        ligands: [{ element: 'O', count: 2 }],
+        ligandCount: 2,
+        charge: 0,
+        radical: 'no2',
+      },
+      geometry,
+      resonanceStates: [[0], [1]],
+    };
+  }
+  if (formula === 'CN^-' || formula === 'NC^-') {
+    return {
+      label: 'CN⁻',
+      parsed: {
+        central: { element: 'C', count: 1 },
+        ligands: [{ element: 'N', count: 1 }],
+        ligandCount: 1,
+        charge: -1,
+        special: 'cyanide',
+        specialBondOrders: [3],
+      },
+      geometry: {
+        name: 'Linear (diatomic)',
+        directions: [[0, 1, 0]],
+        pairs: [],
+        lonePairDirections: [],
+        domains: 2, lonePairs: 0, doubleBonds: 3,
+      },
+      resonanceStates: [[]],
+    };
+  }
+  if (formula === 'CO') {
+    return {
+      label: 'CO',
+      parsed: {
+        central: { element: 'C', count: 1 },
+        ligands: [{ element: 'O', count: 1 }],
+        ligandCount: 1,
+        charge: 0,
+        special: 'co',
+        specialBondOrders: [3],
+      },
+      geometry: {
+        name: 'Linear (diatomic)',
+        directions: [[0, 1, 0]],
+        pairs: [],
+        lonePairDirections: [],
+        domains: 2, lonePairs: 0, doubleBonds: 3,
+      },
+      resonanceStates: [[]],
+    };
+  }
+  if (formula === 'HCN') {
+    return {
+      label: 'HCN',
+      parsed: {
+        central: { element: 'C', count: 1 },
+        ligands: [{ element: 'H', count: 1 }, { element: 'N', count: 1 }],
+        ligandCount: 2,
+        charge: 0,
+        special: 'hcn',
+        specialBondOrders: [1, 3],
+      },
+      geometry: {
+        name: 'Linear',
+        directions: [[0, 1, 0], [0, -1, 0]],
+        pairs: [{ i: 0, j: 1, angle: 180 }],
+        lonePairDirections: [],
+        domains: 2, lonePairs: 0, doubleBonds: 3,
+      },
+      resonanceStates: [[]],
+    };
+  }
+  return null;
+}
+
+function handleMoleculeDraw() {
+  const formula = moleculeInputEl.value.trim();
+  stopResonance();
+  if (!formula) {
+    geometryDisplay.textContent = '';
+    geometryDisplay.className = 'config-display empty';
+    geometryDisplay.style.color = '';
+    geometryDisplay.style.fontWeight = '';
+    return;
+  }
+
+  const special = buildSpecialSpecies(formula);
+  if (special) {
+    hideSubstanceError();
+    renderMolecule(special.parsed, special.geometry, special.resonanceStates, false, formula, special.label);
+    return;
+  }
+
+  const parsed = parseBinaryFormula(formula);
+  if (!parsed) {
+    showGeometryError(`Cannot parse: "${formula}"`);
+    return;
+  }
+
+  if (parsed.central.count > 1) {
+    showGeometryError(`Cannot model multi-center species: "${formula}"`);
+    return;
+  }
+
+  const elementSymbols = [parsed.central.element];
+  parsed.ligands.forEach(l => elementSymbols.push(l.element));
+  const unknownElement = elementSymbols.find(el => !(el in VALENCE_ELECTRONS));
+  if (unknownElement) {
+    showGeometryError(`Unknown element: "${unknownElement}"`);
+    return;
+  }
+
+  const verdict = validateSpecies(parsed);
+  const invalidSpecies = !verdict.ok;
+  if (invalidSpecies) {
+    showSubstanceError(formula);
+  } else {
+    hideSubstanceError();
+  }
+
+  const { central, ligandCount } = parsed;
+  const ligandElements = [];
+  parsed.ligands.forEach(l => { for (let i = 0; i < l.count; i++) ligandElements.push(l.element); });
+
+  const geometry = inferGeometry(central.element, ligandCount, ligandElements, parsed.charge);
+  if (!geometry) {
+    showGeometryError(invalidSpecies ? `Does not exist: "${formula}"` : 'Cannot infer geometry');
+    return;
+  }
+
+  const resonanceStates = generateResonanceStates(ligandCount, geometry.doubleBonds);
+  renderMolecule(parsed, geometry, resonanceStates, invalidSpecies, formula);
+}
+
+function renderMolecule(parsed, geometry, resonanceStates, invalidSpecies, formula, formulaLabel) {
+  const bondType = classifyCompound(parsed);
+  if (bondType === 'ionic') resonanceStates = [[]];
+  currentMolecule = { parsed, geometry, resonanceStates, resonanceIndex: 0, bondType };
+  const typeLabel = bondType === 'ionic' ? 'Ionic' : 'Covalent';
+  anglesAvailable = true;
+  viewLocked = true;
+
+  viewMode = 'angles';
+  clearAllMeshes();
+  clearAngleOverlay();
+  resetAngleAnim();
+  renderViewRow();
+
+  drawMolecule(parsed, geometry, new Set(resonanceStates[0] || []));
+  renderedState = new Set(resonanceStates[0] || []);
+
+  const { central } = parsed;
+  const centerFormula = `${central.element}${central.count > 1 ? toSubscript(central.count) : ''}`;
+  const ligandFormula = parsed.ligands.map(l => `${l.element}${l.count > 1 ? toSubscript(l.count) : ''}`).join('');
+  let chargeLabel = '';
+  if (parsed.charge > 0) chargeLabel = toSuperscript(parsed.charge) + '+';
+  else if (parsed.charge < 0) chargeLabel = toSuperscript(-parsed.charge) + '−';
+
+  if (invalidSpecies) {
+    showGeometryError(`Does not exist: "${formula}"`);
+  } else {
+    geometryDisplay.textContent = `${geometry.name} · ${typeLabel}`;
+    geometryDisplay.className = 'config-display';
+    geometryDisplay.style.color = '#1a1a1a';
+    geometryDisplay.style.fontWeight = '600';
+  }
+  const formulaText = formulaLabel || `${centerFormula}${ligandFormula}${chargeLabel}`;
+  capName.textContent = `${formulaText} · ${geometry.name} · ${typeLabel}`;
+  btnResonance.disabled = resonanceStates.length <= 1;
+}
+
+/* ===== 10. UI ===== */
 let currentN = 1, currentType = 's';
 
 const nRowEl = document.getElementById('nRow');
@@ -1904,18 +2193,6 @@ const btnClear = document.getElementById('btnClear');
 const btnAxes = document.getElementById('btnAxes');
 const btnLonePair = document.getElementById('btnLonePair');
 const btnResonance = document.getElementById('btnResonance');
-
-/* ---- 面板折叠 ---- */
-const panelEl = document.getElementById('panel');
-const panelHandle = document.getElementById('panelHandle');
-panelHandle.addEventListener('click', () => {
-  panelEl.classList.toggle('collapsed');
-});
-
-/* 点击面板内的元素时，如果面板已收起则展开（避免误触后无法操作） */
-panelEl.addEventListener('click', (e) => {
-  if (panelEl.classList.contains('collapsed') && e.target === panelHandle) return;
-}, true);
 
 function countForN(n) {
   let c = 0;
@@ -1949,7 +2226,6 @@ function renderNRow() {
     attachBadge(b, countForN(n));
     b.addEventListener('click', () => {
       if (currentN === n) return;
-      clearMoleculeIfExists();
       currentN = n;
       if (!validTypesFor(n).includes(currentType)) currentType = 's';
       renderAll();
@@ -1967,9 +2243,7 @@ function renderTypeRow() {
     attachBadge(b, countForType(t));
     b.addEventListener('click', () => {
       if (currentType === t) return;
-      clearMoleculeIfExists();
-      currentType = t;
-      renderAll();
+      currentType = t; renderAll();
     });
     typeRowEl.appendChild(b);
   });
@@ -1978,7 +2252,7 @@ function renderTypeRow() {
 function onOrbitalsChanged() {
   refreshCounts();
   updateCaption();
-  if (viewMode === 'angles' && !currentMolecule) renderAngleOverlayForHybrid();
+  if (viewMode === 'angles') renderAngleOverlay();
 }
 
 function makeOrbButton(key, htmlLabel, n, l, m) {
@@ -1986,7 +2260,6 @@ function makeOrbButton(key, htmlLabel, n, l, m) {
   btn.className = 'orb' + (activeMeshes.has(key) ? ' active' : '');
   btn.innerHTML = htmlLabel;
   btn.addEventListener('click', () => {
-    clearMoleculeIfExists();
     if (activeMeshes.has(key)) { removeOrbitalMesh(key); btn.classList.remove('active'); }
     else { addOrbitalMesh(key, l, m, n); btn.classList.add('active'); }
     onOrbitalsChanged();
@@ -1999,7 +2272,6 @@ function makeHybridButton(key, htmlLabel, n, typeId) {
   btn.className = 'orb' + (activeMeshes.has(key) ? ' active' : '');
   btn.innerHTML = htmlLabel;
   btn.addEventListener('click', () => {
-    clearMoleculeIfExists();
     if (activeMeshes.has(key)) { removeOrbitalMesh(key); btn.classList.remove('active'); }
     else { addHybridMesh(key, n, typeId); btn.classList.add('active'); }
     onOrbitalsChanged();
@@ -2025,79 +2297,32 @@ function renderOrbRow() {
 
 function renderViewRow() {
   viewRowEl.querySelectorAll('[data-view]').forEach(btn => {
+    const isAngles = btn.dataset.view === 'angles';
     btn.classList.toggle('active', btn.dataset.view === viewMode);
+    btn.disabled = viewLocked || (isAngles && !anglesAvailable);
+    if (viewLocked) btn.title = 'View modes are disabled while a molecule is shown';
+    else if (isAngles && !anglesAvailable) btn.title = 'Bond angles are only available for molecules';
+    else btn.title = '';
   });
 }
 
-function renderAngleOverlayForHybrid() {
-  clearGroup(angleGroup);
-  resetAnim();
-  const activeHybrids = [];
-  for (const key of activeMeshes.keys()) {
-    const parts = key.split('|');
-    if (Number(parts[1]) === 4) {
-      const typeId = parts[2].replace('hybrid-', '');
-      if (!activeHybrids.includes(typeId)) activeHybrids.push(typeId);
-    }
-  }
-  if (activeHybrids.length === 0) { updateCaption(); return; }
-  const ARROW_LEN = 2.5, HEAD_LEN = 0.24, HEAD_W = 0.1, LABEL_DIST = ARROW_LEN * 0.64;
-  const palette = [0x666666, 0x7c5cff, 0x0ea5e9, 0xf59e0b, 0x10b981];
-  activeHybrids.forEach((typeId, idx) => {
-    const spec = HYBRID_TYPES[typeId];
-    const angleSpec = HYBRID_ANGLE_SPECS[typeId];
-    if (!spec || !angleSpec) return;
-    const color = activeHybrids.length === 1 ? 0x555555 : palette[idx % palette.length];
-    const dirs = spec.directions.map(d => new THREE.Vector3(d[0], d[1], d[2]).normalize());
-    dirs.forEach((dir, i) => {
-      const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(0, 0, 0), ARROW_LEN, color, HEAD_LEN, HEAD_W);
-      angleGroup.add(arrow);
-      pushAnimItem(arrow, i * 90, 400);
-    });
-    angleSpec.pairs.forEach((pair, i) => {
-      const a = dirs[pair[0]], b = dirs[pair[1]];
-      const sum = a.clone().add(b);
-      let labelDir;
-      if (sum.lengthSq() < 0.01) {
-        const perp = new THREE.Vector3(0, 1, 0);
-        if (Math.abs(a.dot(perp)) > 0.9) perp.set(1, 0, 0);
-        labelDir = perp.clone().cross(a).normalize();
-      } else labelDir = sum.normalize();
-      const sprite = makeAngleLabel(`${angleSpec.angleValues[i]}°`, color);
-      sprite.position.copy(labelDir.multiplyScalar(LABEL_DIST));
-      angleGroup.add(sprite);
-      pushAnimItem(sprite, dirs.length * 90 + 150 + i * 120, 400);
-    });
-  });
-  updateCaption();
-}
-
-/* ===== View 切换 ===== */
 viewRowEl.querySelectorAll('[data-view]').forEach(btn => {
   btn.addEventListener('click', () => {
+    if (btn.disabled) return;
     const newMode = btn.dataset.view;
     if (newMode === viewMode) return;
     viewMode = newMode;
-    renderViewRow();
-    if (currentMolecule) {
-      renderCurrentOverlay(true);
+    if (viewMode === 'angles') {
+      for (const obj of activeMeshes.values()) obj.visible = false;
+      renderAngleOverlay();
     } else {
-      if (viewMode === 'angles') {
-        for (const obj of activeMeshes.values()) obj.visible = false;
-        clearGroup(shapeGroup);
-        clearGroup(cloudGroup);
-        clearGroup(lonePairGroup);
-        renderAngleOverlayForHybrid();
-      } else {
-        clearGroup(angleGroup);
-        clearGroup(shapeGroup);
-        clearGroup(cloudGroup);
-        clearGroup(lonePairGroup);
-        stopResonance();
-        for (const obj of activeMeshes.values()) obj.visible = true;
-        rebuildAllOrbitals();
-      }
+      stopResonance();
+      for (const obj of activeMeshes.values()) obj.visible = true;
+      rebuildAllOrbitals();
+      clearAngleOverlay();
+      currentMolecule = null;
     }
+    renderViewRow();
     updateCaption();
   });
 });
@@ -2105,11 +2330,7 @@ viewRowEl.querySelectorAll('[data-view]').forEach(btn => {
 function renderAll() {
   renderNRow(); renderTypeRow(); renderOrbRow(); renderViewRow();
   labelMlEl.style.display = (currentType === 'hybrid') ? 'none' : '';
-  if (viewMode === 'angles' && !currentMolecule) {
-    renderAngleOverlayForHybrid();
-  } else {
-    updateCaption();
-  }
+  updateCaption();
 }
 
 function refreshCounts() {
@@ -2150,21 +2371,24 @@ function updateCaption() {
   else capName.textContent = `${active.length} orbitals selected`;
 }
 
-/* ===== Draw config ===== */
+/* ===== 11. Draw config ===== */
 let configAnimStart = 0;
 
 function drawConfiguration(config) {
+  anglesAvailable = false;
+  viewLocked = false;
+  showWavefunctionLegend();
   if (viewMode === 'angles') { viewMode = 'shape'; renderViewRow(); }
   stopResonance();
   clearAllMeshes();
-  clearAllOverlays();
-  clearGroup(atomGroup);
-  clearGroup(lonePairGroup);
+  clearAngleOverlay();
   currentMolecule = null;
   geometryDisplay.textContent = '';
   geometryDisplay.className = 'config-display empty';
+
   const keys = [];
   for (const { n, l } of config) for (const m of mValuesFor(l)) keys.push({ key: makeKey(n, l, m), l, m, n });
+
   configAnimStart = performance.now();
   keys.forEach((item, i) => {
     const obj = makeOrbitalObject(item.key, item.l, item.m, item.n, false, null);
@@ -2173,8 +2397,10 @@ function drawConfiguration(config) {
     scene.add(obj);
     activeMeshes.set(item.key, obj);
   });
+
   refreshCounts();
   renderOrbRow();
+  renderViewRow();
   updateCaption();
 }
 
@@ -2182,7 +2408,11 @@ function handleDraw() {
   const symbol = elementInputEl.value.trim();
   if (!symbol) { configDisplay.textContent = ''; configDisplay.className = 'config-display empty'; return; }
   const Z = findElementAtomicNumber(symbol);
-  if (Z === null) { configDisplay.textContent = `Unknown element: "${symbol}"`; configDisplay.className = 'config-display error'; return; }
+  if (Z === null) {
+    configDisplay.textContent = `Unknown element: "${symbol}" (symbols are case-sensitive, e.g. Co)`;
+    configDisplay.className = 'config-display error';
+    return;
+  }
   let charge = 0;
   const chargeRaw = chargeInputEl.value.trim();
   if (chargeRaw !== '' && chargeRaw !== '-' && chargeRaw !== '+') {
@@ -2196,7 +2426,7 @@ function handleDraw() {
   let chargeLabel = '';
   if (charge > 0) chargeLabel = toSuperscript(charge) + '+';
   else if (charge < 0) chargeLabel = toSuperscript(-charge) + '−';
-  const symClean = symbol.charAt(0).toUpperCase() + symbol.slice(1).toLowerCase();
+  const symClean = symbol;
   configDisplay.innerHTML = `${symClean}${chargeLabel}  ${formatted}`;
   configDisplay.className = 'config-display';
   drawConfiguration(config);
@@ -2212,35 +2442,42 @@ moleculeInputEl.addEventListener('keydown', e => { if (e.key === 'Enter') handle
 btnLonePair.addEventListener('click', () => {
   lonePairVisible = !lonePairVisible;
   btnLonePair.classList.toggle('active', lonePairVisible);
-  if (currentMolecule) renderLonePairs(true);
+  if (currentMolecule) redrawCurrentMolecule(false);
+  else lonePairGroup.visible = lonePairVisible;
 });
 
 btnResonance.addEventListener('click', () => {
   if (!currentMolecule || currentMolecule.resonanceStates.length <= 1) return;
-  if (resonanceTimer) {
+  if (resonanceMode) {
+    // 退出共振模式：回到初始结构，移除所有虚线轮廓
     stopResonance();
+    currentMolecule.resonanceIndex = 0;
+    redrawCurrentMolecule(false);
   } else {
+    // 进入共振模式：先显示当前键位与虚线候选位，随后每秒切换一次
+    resonanceMode = true;
     btnResonance.classList.add('active');
-    currentMolecule.resonanceIndex = (currentMolecule.resonanceIndex + 1) % currentMolecule.resonanceStates.length;
-    drawAtoms(currentMolecule.parsed, currentMolecule.geometry,
-      new Set(currentMolecule.resonanceStates[currentMolecule.resonanceIndex] || []));
-    renderCurrentOverlay(false);
+    redrawCurrentMolecule(false);
     resonanceTimer = setInterval(() => {
-      if (!currentMolecule || currentMolecule.resonanceStates.length <= 1) { stopResonance(); return; }
+      if (!currentMolecule || currentMolecule.resonanceStates.length <= 1 || !resonanceMode) { stopResonance(); return; }
       currentMolecule.resonanceIndex = (currentMolecule.resonanceIndex + 1) % currentMolecule.resonanceStates.length;
-      drawAtoms(currentMolecule.parsed, currentMolecule.geometry,
-        new Set(currentMolecule.resonanceStates[currentMolecule.resonanceIndex] || []));
-      renderCurrentOverlay(false);
+      redrawCurrentMolecule(false);
     }, 1000);
   }
 });
 
 function handleClear() {
   stopResonance();
+  anglesAvailable = false;
+  viewLocked = false;
+  hideLegend();
+  if (viewMode === 'angles') viewMode = 'shape';
+  hideSubstanceError();
   clearAllMeshes();
-  clearAllOverlays();
-  clearGroup(atomGroup);
-  clearGroup(lonePairGroup);
+  clearAngleOverlay();
+  clearTimeout(transitionTimer);
+  disposeTransitionObjects();
+  renderedState = new Set();
   currentMolecule = null;
   configDisplay.textContent = ''; configDisplay.className = 'config-display empty';
   elementInputEl.value = ''; chargeInputEl.value = '';
@@ -2254,7 +2491,7 @@ function handleClear() {
 btnClear.addEventListener('click', handleClear);
 renderAll();
 
-/* ===== Controls ===== */
+/* ===== 12. Controls ===== */
 const btnRotate = document.getElementById('btnRotate');
 btnRotate.addEventListener('click', () => {
   controls.autoRotate = !controls.autoRotate;
@@ -2268,11 +2505,12 @@ document.getElementById('btnReset').addEventListener('click', () => {
 function setAxesVisible(v) { axesVisible = v; axesGroup.visible = v; btnAxes.classList.toggle('on', v); }
 btnAxes.addEventListener('click', () => setAxesVisible(!axesVisible));
 
-/* ===== 动画循环 ===== */
+/* ===== 13. Animation loop ===== */
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
   const now = performance.now();
+
   if (configAnimStart > 0) {
     const elapsed = now - configAnimStart;
     let allAppeared = true;
@@ -2296,6 +2534,7 @@ function animate() {
       }
     }
   }
+
   for (const [key, obj] of removingMeshes) {
     if (obj.userData.removeProgress === undefined) {
       obj.userData.removeProgress = 0;
@@ -2307,7 +2546,9 @@ function animate() {
     if (p >= 1 || s < 0.006) { scene.remove(obj); obj.geometry.dispose(); removingMeshes.delete(key); }
     else obj.scale.setScalar(s);
   }
-  if (animItems.length > 0) updateAnim(now);
+
+  if (angleAnimItems.length > 0) updateAngleAnim(now);
+  if (opacityTweens.length > 0) updateOpacityTweens(now);
   renderer.render(scene, camera);
 }
 animate();
